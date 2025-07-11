@@ -451,6 +451,8 @@ Function GetMonsterParam(id: integer): tstringlist;
 Function GetMonsterName(id: integer): ansistring;
 procedure ClearShadow;
 Function GetLanguageString(id: integer): ansistring;
+procedure SetMonsterDefaults();
+procedure SetObjectDefaults();
 
 var
   Form1: TForm1;
@@ -2635,6 +2637,24 @@ begin
   end;
 end;
 
+procedure SetMonsterDefaults();
+begin
+  // Set default monster position based on user's setting
+  Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
+  Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
+  Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+  Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+end;
+
+procedure SetObjectDefaults();
+begin
+  // Set default object position based on user's setting
+  Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
+  Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
+  Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+  Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+end;
+
 procedure TForm1.CheckListBox1Click(Sender: TObject);
 var
   x: integer;
@@ -3390,56 +3410,13 @@ begin
 end;
 
 procedure TForm1.Copyitem1Click(Sender: TObject);
-var
-  x, y: integer;
 begin
-  if (form10.ComboBox1.ItemIndex > -1) and (form10.tag = 1) then
-  begin
-    inc(Floor[sfloor].ObjCount);
-    for x := 0 to preseti - 1 do
-      if ObjTemplate[x].name = form10.ComboBox1.Text then
-        break;
-    for y := 0 to sizeof(TObj) - 1 do
-      pansichar(@Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1])[y] := pansichar(@ObjTemplate[x].data)[y];
-
-    if form10.UnicodestringGrid1.Visible then
-      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow8 := strtofloat(form10.UnicodestringGrid1.Cells[1, 0]);
-
-    if form10.UnicodeStringGrid2.Visible then
-    begin
-      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow8 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 0]);
-      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow9 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 1]);
-      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Unknow10 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 2]);
-    end;
-
-    // Set default position based on user's setting
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
-    MoveSel := Floor[sfloor].ObjCount - 1;
-    MoveType := 2;
-    ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].Skin));
-    if have3d then
-    begin
-      MyObjCount := Floor[sfloor].ObjCount;
-      setlength(MyObj, MyObjCount);
-      MyObj[MoveSel] := nil;
-      Generateobj(Floor[sfloor].Obj[MoveSel], MoveSel);
-
-    end;
-    ctrldw := true;
-    firstdrop := true;
-    DrawMap;
-    isedited := true;
-  end;
+  Copylastitem1Click(nil);
 end;
 
 procedure TForm1.Copylastitem1Click(Sender: TObject);
 var
-x, y: integer;
+  x: integer;
 begin
   if (form10.ComboBox1.ItemIndex > -1) and (form10.tag = 1) then
   begin
@@ -3447,9 +3424,7 @@ begin
     for x := 0 to preseti - 1 do
       if ObjTemplate[x].name = form10.ComboBox1.Text then
         break;
-    for y := 0 to sizeof(TObj) - 1 do
-      pansichar(@Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1])[y] := pansichar(@ObjTemplate[x].data)[y];
-
+    move(ObjTemplate[x].data, Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1], sizeof(TObj));
     if form10.UnicodestringGrid1.Visible then
       Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow8 := strtofloat(form10.UnicodestringGrid1.Cells[1, 0]);
 
@@ -3460,11 +3435,7 @@ begin
       Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Unknow10 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 2]);
     end;
 
-    // Set default position based on user's setting
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    SetObjectDefaults();
     lblStatus.Visible := true;
     lblModifiers.Visible := true;
     MoveSel := Floor[sfloor].ObjCount - 1;
@@ -3487,7 +3458,7 @@ end;
 
 procedure TForm1.Copylastmonster1Click(Sender: TObject);
 var
-  x, y: integer;
+  x: integer;
 begin
   if (form9.ComboBox1.ItemIndex > -1) and (form9.tag = 1) then
   begin
@@ -3495,17 +3466,12 @@ begin
     for x := 0 to presetm - 1 do
       if MonsterTemplate[x].name = form9.ComboBox1.Text then
         break;
-    for y := 0 to sizeof(TMonster) - 1 do
-      pansichar(@Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1])[y] := pansichar(@MonsterTemplate[x].data)[y];
+    move(MonsterTemplate[x].data, Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1], sizeof(TMonster));
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Unknow5 := form9.SpinEdit1.value;
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow6 := form9.SpinEdit1.value;
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
 
-    // Set default position based on user's setting
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    SetMonsterDefaults();
     lblStatus.Visible := true;
     lblModifiers.Visible := true;
     MoveSel := Floor[sfloor].MonsterCount - 1;
@@ -3524,41 +3490,8 @@ begin
 end;
 
 procedure TForm1.Copymonster1Click(Sender: TObject);
-var
-  x, y: integer;
 begin
-  if (form9.ComboBox1.ItemIndex > -1) and (form9.tag = 1) then
-  begin
-    inc(Floor[sfloor].MonsterCount);
-    for x := 0 to presetm - 1 do
-      if MonsterTemplate[x].name = form9.ComboBox1.Text then
-        break;
-    for y := 0 to sizeof(TMonster) - 1 do
-      pansichar(@Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1])[y] := pansichar(@MonsterTemplate[x].data)[y];
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Unknow5 := form9.SpinEdit1.value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow6 := form9.SpinEdit1.value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
-
-    // Set default position based on user's setting
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
-    MoveSel := Floor[sfloor].MonsterCount - 1;
-    MoveType := 1;
-    firstdrop := true;
-    if have3d then
-      ListBox1.Items.Add('#' + inttostr(MoveSel) + ' - ' + GenerateMonsterName(Floor[sfloor].Monster[MoveSel],
-        MoveSel, 1))
-    else
-      ListBox1.Items.Add('#' + inttostr(MoveSel) + ' - ' + GenerateMonsterName(Floor[sfloor].Monster[MoveSel],
-        MoveSel, 0));
-    DrawMap;
-    ctrldw := true;
-    isedited := true;
-  end;
+  Copylastmonster1Click(nil);
 end;
 
 procedure TForm1.ViewScrypt1Click(Sender: TObject);
@@ -5414,11 +5347,7 @@ begin
       Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Unknow10 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 2]);
     end;
 
-    // Set default position based on user's setting
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
-    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    SetObjectDefaults();
     lblStatus.Visible := true;
     lblModifiers.Visible := true;
     MoveSel := Floor[sfloor].ObjCount - 1;
@@ -5503,11 +5432,7 @@ begin
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow6 := form9.SpinEdit1.value;
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
 
-    // Set default position based on user's setting
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
-    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    SetMonsterDefaults();
     lblStatus.Visible := true;
     lblModifiers.Visible := true;
     MoveSel := Floor[sfloor].MonsterCount - 1;
