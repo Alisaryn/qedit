@@ -65,9 +65,9 @@ begin
       Reg.WriteFloat('DefaultZ', nbDefaultZ.Value);
       Reg.WriteInteger('SnapValue', seSnapTolerance.Value);
       if chkSnapRotate.Checked then
-        Reg.WriteInteger('SnapRotate', 1)
+        Reg.WriteBool('SnapRotate', true)
       else
-        Reg.WriteInteger('SnapRotate', 0);
+        Reg.WriteBool('SnapRotate', false);
       Reg.CloseKey;
     end;
     finally

@@ -534,7 +534,7 @@ var
   dragenabled: integer = 0;
   snapenabled: integer = 0;
   snapvalue: integer = 10;
-  snaprotate: integer = 0;
+  snaprotate: Boolean = false;
   OffsetX: single = 0.0;
   OffsetY: single = 0.0;
   OffsetZ: single = 0.0;
@@ -4067,7 +4067,7 @@ begin
         if Reg.ValueExists('SnapValue') then
           snapvalue := Reg.ReadInteger('SnapValue');
         if Reg.ValueExists('SnapRotate') then
-          snaprotate := Reg.ReadInteger('SnapRotate');
+          snaprotate := Reg.ReadBool('SnapRotate');
         if Reg.ValueExists('OffsetX') then
           OffsetX := Reg.ReadFloat('OffsetX');
         if Reg.ValueExists('OffsetY') then
@@ -4209,7 +4209,7 @@ begin
     if snapenabled = 1 then
       smSnap.Checked := true
     else smSnap.Checked := false;
-    if snaprotate = 1 then
+    if snaprotate then
       FPlacementOptions.chkSnapRotate.Checked := true
     else FPlacementOptions.chkSnapRotate.Checked := false;
 
@@ -5720,7 +5720,7 @@ begin
         end;
 
         // Match monster's rotations if enabled
-        if snaprotate = 1 then
+        if snaprotate then
           Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
       end;
 
@@ -5795,7 +5795,7 @@ begin
         end;
 
         // Match object's rotations if enabled
-        if snaprotate = 1 then
+        if snaprotate then
           Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
       end;
 
@@ -7098,9 +7098,9 @@ begin
   // Update based on snap preferences
   snapvalue := FPlacementOptions.seSnapTolerance.Value;
   if FPlacementOptions.chkSnapRotate.Checked then
-    snaprotate := 1
+    snaprotate := true
   else
-    snaprotate := 0;
+    snaprotate := false;
 end;
 
 procedure TForm1.smDeleteClick(Sender: TObject);
