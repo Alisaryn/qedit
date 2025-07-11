@@ -282,8 +282,6 @@ var v,rayOrigin,rayDir:TD3DXVECTOR3;
     rt:dword;
     px2,px3,py2,py3:single;
 begin
-    snapvalue := FPlacementOptions.seSnapTolerance.Value;
-
     if (shift = [ssleft]) and (not rtx) and (not rty) and (not rtz) then begin
         vz:=vz+((lmy-y)/120);
         if vz > 1.5 then vz:=1.5;

@@ -412,7 +412,6 @@ type
     procedure smDragClick(Sender: TObject);
     procedure smSnapClick(Sender: TObject);
     procedure smPlacementClick(Sender: TObject);
-    procedure PlacementOptions1Click(Sender: TObject);
     procedure Hotkeys1Click(Sender: TObject);
     procedure smMoveClick(Sender: TObject);
     procedure Copylastmonster1Click(Sender: TObject);
@@ -535,6 +534,7 @@ var
   dragenabled: integer = 0;
   snapenabled: integer = 0;
   snapvalue: integer = 10;
+  snaprotate: integer = 0;
   OffsetX: single = 0.0;
   OffsetY: single = 0.0;
   OffsetZ: single = 0.0;
@@ -4066,6 +4066,8 @@ begin
           snapenabled := Reg.ReadInteger('SnapEnabled');
         if Reg.ValueExists('SnapValue') then
           snapvalue := Reg.ReadInteger('SnapValue');
+        if Reg.ValueExists('SnapRotate') then
+          snaprotate := Reg.ReadInteger('SnapRotate');
         if Reg.ValueExists('OffsetX') then
           OffsetX := Reg.ReadFloat('OffsetX');
         if Reg.ValueExists('OffsetY') then
@@ -4207,6 +4209,10 @@ begin
     if snapenabled = 1 then
       smSnap.Checked := true
     else smSnap.Checked := false;
+    if snaprotate = 1 then
+      FPlacementOptions.chkSnapRotate.Checked := true
+    else FPlacementOptions.chkSnapRotate.Checked := false;
+
     FPlacementOptions.seSnapTolerance.Value := snapvalue;
     FPlacementOptions.nbOffsetX.Value := OffsetX;
     FPlacementOptions.nbOffsetY.Value := OffsetY;
@@ -5573,7 +5579,6 @@ var
 begin
   if MoveSel > -1 then
   begin
-    snapvalue := FPlacementOptions.seSnapTolerance.Value;
     lblStatus.Visible := false;
     lblModifiers.Visible := false;
     // find the nearest zone
@@ -5713,6 +5718,10 @@ begin
               end;
           end;
         end;
+
+        // Match monster's rotations if enabled
+        if snaprotate = 1 then
+          Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
       end;
 
       // look around to find the best pz
@@ -5784,6 +5793,10 @@ begin
               end;
           end;
         end;
+
+        // Match object's rotations if enabled
+        if snaprotate = 1 then
+          Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
       end;
 
       if not altdw or firstdrop then
@@ -7082,6 +7095,12 @@ end;
 procedure TForm1.smPlacementClick(Sender: TObject);
 begin
   FPlacementOptions.showmodal();
+  // Update based on snap preferences
+  snapvalue := FPlacementOptions.seSnapTolerance.Value;
+  if FPlacementOptions.chkSnapRotate.Checked then
+    snaprotate := 1
+  else
+    snaprotate := 0;
 end;
 
 procedure TForm1.smDeleteClick(Sender: TObject);
@@ -7445,7 +7464,7 @@ end;
 
 procedure TForm1.Options1Click(Sender: TObject);
 begin
-  FPlacementOptions.showmodal();
+  smPlacementClick(nil);
 end;
 
 {
@@ -7486,11 +7505,6 @@ begin
     Handled := true;
     Button6Click(self);
   end;
-end;
-
-procedure TForm1.PlacementOptions1Click(Sender: TObject);
-begin
-  FPlacementOptions.ShowModal;
 end;
 
 procedure TForm1.PopupMenu1Popup(Sender: TObject);
