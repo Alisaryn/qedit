@@ -338,7 +338,6 @@ begin
             sel3d.SetCoordinate(mymonst[selected].PositionX ,
                 floor[sfloor].Monster[selected].Pos_z+miz[Floor[sfloor].Monster[selected].map_section]+0.5,
                 mymonst[selected].Positionz );
-
         end;
         if stype = 2 then begin
             MyObj[selected].PositionX:=rayOrigin.x;
@@ -357,7 +356,6 @@ begin
             sel3d.SetCoordinate(MyObj[selected].PositionX ,
                 floor[sfloor].obj[selected].Pos_Z+miz[Floor[sfloor].obj[selected].Map_Section]+0.5,
                 MyObj[selected].Positionz );
-
         end;
 
     end;
