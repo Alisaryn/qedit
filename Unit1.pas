@@ -86,7 +86,7 @@ const
     'Del Rappy', // 7
     'Saint Million', 'Shambertin', 'Kondrieu', 'Vol Opt Part A', 'NPC Rappy', 'Unknown');
   MapID: array [0 .. 45] of integer = (0, 1, 2, 3, 9, 15, 21, 27, 33, 38, 43, 48, 49, 50, 51, 52, 67, 70 // ep1 0-17
-    , 73, 74, 77, 80, 83, 86, 87, 88, 89, 92, 93, 96, 99, 100, 101, 102, 103, 104 // ep2 18 -  35
+    , 73, 80, 83, 74, 77, 86, 87, 88, 89, 92, 93, 96, 99, 100, 101, 102, 103, 104 // ep2 18 -  35
     , 109, 110, 111, 112, 113, 114, 117, 118, 121, 122 // ep4 36 - 44
     );
   EPMap: array [0 .. 2] of integer = (0, 18, 36);
@@ -108,11 +108,11 @@ const
     'map_soccer11c.rel', 'map_vs01_00c.rel', 'map_vs01_01c.rel', 'map_vs01_02c.rel', 'map_vs02_00c.rel',
     'map_vs02_01c.rel', 'map_vs02_02c.rel', // episode 2
     'map_labo00_00c.rel', // 73
-    'map_ruins01_00c.rel', // 80
-    'map_ruins01_01c.rel', 'map_ruins01_02c.rel', 'map_ruins02_00c.rel', // 83
-    'map_ruins02_01c.rel', 'map_ruins02_02c.rel', 'map_space01_00c.rel', // 74
+    'map_space01_00c.rel', // 74
     'map_space01_01c.rel', 'map_space01_02c.rel', 'map_space02_00c.rel', // 77
-    'map_space02_01c.rel', 'map_space02_02c.rel', 'map_jungle01_00c.rel', // 86
+    'map_space02_01c.rel', 'map_space02_02c.rel', 'map_ruins01_00c.rel', // 80
+    'map_ruins01_01c.rel', 'map_ruins01_02c.rel', 'map_ruins02_00c.rel', // 83
+    'map_ruins02_01c.rel', 'map_ruins02_02c.rel', 'map_jungle01_00c.rel', // 86
     'map_jungle02_00c.rel', // 87
     'map_jungle03_00c.rel', // 88
     'map_jungle04_00c.rel', // 89
@@ -151,11 +151,11 @@ const
     'map_soccer11.xvm', 'map_soccer11.xvm', 'map_vs01.xvm', 'map_vs01.xvm', 'map_vs01.xvm', 'map_vs02.xvm',
     'map_vs02.xvm', 'map_vs02.xvm', // episode 2
     'map_labo00.xvm', // 73
-    'map_ruins01.xvm', // 80
-    'map_ruins01.xvm', 'map_ruins01.xvm', 'map_ruins02.xvm', // 83
-    'map_ruins02.xvm', 'map_ruins02.xvm', 'map_space01.xvm', // 74
+     'map_space01.xvm', // 74
     'map_space01.xvm', 'map_space01.xvm', 'map_space02.xvm', // 77
-    'map_space02.xvm', 'map_space02.xvm', 'map_jungle01.xvm', // 86
+    'map_space02.xvm', 'map_space02.xvm', 'map_ruins01.xvm', // 80
+    'map_ruins01.xvm', 'map_ruins01.xvm', 'map_ruins02.xvm', // 83
+    'map_ruins02.xvm', 'map_ruins02.xvm', 'map_jungle01.xvm', // 86
     'map_jungle02.xvm', // 87
     'map_jungle03.xvm', // 88
     'map_jungle04.xvm', // 89
@@ -191,11 +191,11 @@ const
     'BA: Palace - map 1', 'BA: Palace - map 2', 'BA: Palace - map 3',
     // episode 2
     'Labo', // 73
-    'Temple alpha - map 1', // 80
-    'Temple alpha - map 2', 'Temple alpha - map 3', 'Temple beta - map 1', // 83
-    'Temple beta - map 2', 'Temple beta - map 3', 'Space Ship alpha - map 1', // 74
+    'Space Ship alpha - map 1', // 74
     'Space Ship alpha - map 2', 'Space Ship alpha - map 3', 'Space Ship beta - map 1', // 77
-    'Space Ship beta - map 2', 'Space Ship beta - map 3', 'CCA', // 86
+    'Space Ship beta - map 2', 'Space Ship beta - map 3', 'Temple alpha - map 1', // 80
+    'Temple alpha - map 2', 'Temple alpha - map 3', 'Temple beta - map 1', // 83
+    'Temple beta - map 2', 'Temple beta - map 3', 'CCA', // 86
     'Jungle north', // 88
     'Jungle east', // 87
 
