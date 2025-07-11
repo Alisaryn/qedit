@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ImgList;
+  Dialogs, StdCtrls, ImgList, System.ImageList;
 
 type
   TForm27 = class(TForm)

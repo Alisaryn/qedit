@@ -11,9 +11,7 @@ object Form10: TForm10
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 194
@@ -38,6 +36,7 @@ object Form10: TForm10
     Width = 77
     Height = 25
     Caption = 'Add'
+    Default = True
     TabOrder = 1
     OnClick = Button1Click
   end
@@ -46,6 +45,7 @@ object Form10: TForm10
     Top = 138
     Width = 75
     Height = 25
+    Cancel = True
     Caption = 'Cancel'
     TabOrder = 2
     OnClick = Button2Click

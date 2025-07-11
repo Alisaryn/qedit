@@ -11,9 +11,7 @@ object Form3: TForm3
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 10
@@ -28,7 +26,7 @@ object Form3: TForm3
     Width = 75
     Height = 25
     Caption = 'OK'
-    TabOrder = 0
+    TabOrder = 1
     OnClick = Button1Click
   end
   object UnicodeMemo1: TMemo
@@ -36,6 +34,6 @@ object Form3: TForm3
     Top = 26
     Width = 135
     Height = 97
-    TabOrder = 1
+    TabOrder = 0
   end
 end

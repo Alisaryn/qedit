@@ -11,9 +11,7 @@ object Form30: TForm30
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 14
@@ -28,7 +26,6 @@ object Form30: TForm30
     Width = 159
     Height = 22
     Style = csOwnerDrawFixed
-    ItemHeight = 16
     ItemIndex = 0
     TabOrder = 0
     Text = 'V1 - Pso DC'
@@ -44,6 +41,7 @@ object Form30: TForm30
     Width = 75
     Height = 25
     Caption = 'OK'
+    Default = True
     TabOrder = 1
     OnClick = Button1Click
   end

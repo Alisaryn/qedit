@@ -11,9 +11,7 @@ object Form6: TForm6
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poOwnerFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 16
@@ -35,7 +33,6 @@ object Form6: TForm6
     Width = 103
     Height = 22
     Style = csOwnerDrawFixed
-    ItemHeight = 16
     ItemIndex = 1
     TabOrder = 0
     Text = 'English'
@@ -62,6 +59,7 @@ object Form6: TForm6
     Width = 75
     Height = 25
     Caption = 'Ok'
+    Default = True
     TabOrder = 2
     OnClick = Button1Click
   end

@@ -10,9 +10,7 @@ object Form32: TForm32
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object StringGrid1: TStringGrid
     Left = 0
@@ -22,6 +20,7 @@ object Form32: TForm32
     Align = alTop
     ColCount = 6
     FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goFixedRowDefAlign]
     TabOrder = 0
     OnKeyPress = StringGrid1KeyPress
     OnSelectCell = StringGrid1SelectCell

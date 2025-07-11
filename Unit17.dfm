@@ -11,9 +11,7 @@ object Form17: TForm17
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 16
@@ -41,7 +39,6 @@ object Form17: TForm17
     Top = 32
     Width = 145
     Height = 21
-    ItemHeight = 13
     ItemIndex = 0
     TabOrder = 0
     Text = '320x240'
@@ -56,7 +53,6 @@ object Form17: TForm17
     Top = 80
     Width = 145
     Height = 21
-    ItemHeight = 13
     ItemIndex = 0
     TabOrder = 1
     Text = '0'
@@ -72,6 +68,7 @@ object Form17: TForm17
     Width = 75
     Height = 25
     Caption = 'Save'
+    Default = True
     TabOrder = 2
     OnClick = Button1Click
   end
@@ -80,7 +77,6 @@ object Form17: TForm17
     Top = 128
     Width = 145
     Height = 21
-    ItemHeight = 13
     ItemIndex = 0
     TabOrder = 3
     Text = 'Close'
