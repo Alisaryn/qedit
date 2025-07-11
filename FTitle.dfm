@@ -11,9 +11,7 @@ object Form2: TForm2
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 12
@@ -28,7 +26,8 @@ object Form2: TForm2
     Width = 75
     Height = 25
     Caption = 'OK'
-    TabOrder = 0
+    Default = True
+    TabOrder = 1
     OnClick = Button1Click
   end
   object Edit1: TEdit
@@ -38,6 +37,6 @@ object Form2: TForm2
     Height = 21
     AutoSize = False
     MaxLength = 32
-    TabOrder = 1
+    TabOrder = 0
   end
 end

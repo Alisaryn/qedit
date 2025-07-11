@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, D3Dx9, StdCtrls;
+  Dialogs, ExtCtrls, D3Dx9, StdCtrls, FPlacement;
 
 type
   TForm13 = class(TForm)
@@ -278,10 +278,12 @@ procedure TForm13.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
 
 var v,rayOrigin,rayDir:TD3DXVECTOR3;
     m,n:TD3DXMATRIX;
-    i,c:integer;
+    i,c,j:integer;
     rt:dword;
     px2,px3,py2,py3:single;
 begin
+    snapvalue := FPlacementOptions.seSnapTolerance.Value;
+
     if (shift = [ssleft]) and (not rtx) and (not rty) and (not rtz) then begin
         vz:=vz+((lmy-y)/120);
         if vz > 1.5 then vz:=1.5;
@@ -331,6 +333,7 @@ begin
             floor[sfloor].Monster[selected].Pos_X:=px3;
             floor[sfloor].Monster[selected].Pos_Y:=py3;
 
+            // TODO: Implement proper snap for 3D View
 
             sel3d.SetCoordinate(mymonst[selected].PositionX ,
                 floor[sfloor].Monster[selected].Pos_z+miz[Floor[sfloor].Monster[selected].map_section]+0.5,
@@ -348,6 +351,8 @@ begin
             py3 := sin(rt/10430.37835)*px2 + cos(rt/10430.37835)*py2;
             floor[sfloor].Obj[selected].Pos_X:=px3;
             floor[sfloor].Obj[selected].Pos_Y:=py3;
+
+            // TODO: Implement proper snap for 3D View
 
             sel3d.SetCoordinate(MyObj[selected].PositionX ,
                 floor[sfloor].obj[selected].Pos_Z+miz[Floor[sfloor].obj[selected].Map_Section]+0.5,

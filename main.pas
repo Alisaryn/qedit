@@ -251,7 +251,6 @@ type
     Button12: TButton;
     About1: TMenuItem;
     N3DSetup1: TMenuItem;
-    N3: TMenuItem;
     Itemslistbb1: TMenuItem;
     help1: TMenuItem;
     PopupMenu1: TPopupMenu;
@@ -298,6 +297,34 @@ type
     ActionList1: TActionList;
     Action1: TAction;
     Monstercount1: TMenuItem;
+    smNew: TMenuItem;
+    smEdit: TMenuItem;
+    smDelete: TMenuItem;
+    smDrag: TMenuItem;
+    smNewMonster: TMenuItem;
+    smNewItem: TMenuItem;
+    N10: TMenuItem;
+    N11: TMenuItem;
+    smUndo: TMenuItem;
+    smSnap: TMenuItem;
+    smPlacement: TMenuItem;
+    N12: TMenuItem;
+    smMove: TMenuItem;
+    Copylastmonster1: TMenuItem;
+    Copylastitem1: TMenuItem;
+    lblStatus: TLabel;
+    lblModifiers: TLabel;
+    Hotkeys1: TMenuItem;
+    Newmonster1: TMenuItem;
+    Newitem1: TMenuItem;
+    Copymonster1: TMenuItem;
+    Copyitem1: TMenuItem;
+    Delete1: TMenuItem;
+    Edit1: TMenuItem;
+    Move1: TMenuItem;
+    Undo1: TMenuItem;
+    Options1: TMenuItem;
+    Cancelplacement1: TMenuItem;
     procedure Quit1Click(Sender: TObject);
     procedure Load1Click(Sender: TObject);
     procedure CheckListBox1Click(Sender: TObject);
@@ -377,6 +404,32 @@ type
     procedure byType2Click(Sender: TObject);
     procedure Monstercount1Click(Sender: TObject);
     procedure Button13Click(Sender: TObject);
+    procedure smEditClick(Sender: TObject);
+    procedure smNewMonsterClick(Sender: TObject);
+    procedure smNewItemClick(Sender: TObject);
+    procedure smDeleteClick(Sender: TObject);
+    procedure smUndoClick(Sender: TObject);
+    procedure smDragClick(Sender: TObject);
+    procedure smSnapClick(Sender: TObject);
+    procedure smPlacementClick(Sender: TObject);
+    procedure PlacementOptions1Click(Sender: TObject);
+    procedure Hotkeys1Click(Sender: TObject);
+    procedure smMoveClick(Sender: TObject);
+    procedure Copylastmonster1Click(Sender: TObject);
+    procedure Copylastitem1Click(Sender: TObject);
+    procedure lblModifiersClick(Sender: TObject);
+    procedure Newmonster1Click(Sender: TObject);
+    procedure Newitem1Click(Sender: TObject);
+    procedure Copymonster1Click(Sender: TObject);
+    procedure Copyitem1Click(Sender: TObject);
+    procedure Delete1Click(Sender: TObject);
+    procedure Edit1Click(Sender: TObject);
+    procedure Move1Click(Sender: TObject);
+    procedure Undo1Click(Sender: TObject);
+    procedure Options1Click(Sender: TObject);
+    procedure Cancelplacement1Click(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 
   private
     procedure MenueDrawItemX(xMenu: TMenu);
@@ -417,7 +470,7 @@ var
   MidPU: array [0 .. 25566] of Boolean;
   // fncoff:array[0..100000] of dword;
   mapfile, mapxvmfile: array [0 .. 40] of ansistring;
-  lmpx, lmpy, mpx, mpy, mdown, asmcount: integer;
+  lmpx, lmpy, mpx, mpy, mdown, mdrag, asmcount: integer;
   asmcode: array [0 .. 1000] of TAsmFnc;
   AsmRef: array [0 .. 100000] of dword;
   AsmData: Array [0 .. 4000000] of byte;
@@ -425,7 +478,7 @@ var
   regis: array [0 .. 255] of dword;
   AsmMode: integer;
   curepi: integer;
-  ctrldw, shiftdw, altdw, firstdrop: Boolean;
+  ctrldw, shiftdw, altdw, ddown, fdown, sdown, firstdrop: Boolean;
   ObjTemplate: array [0 .. 400] of TObjTemplate;
   MonsterTemplate: array [0 .. 400] of TMonsterTemplate;
   player: array [0 .. 1] of TPlayer;
@@ -473,9 +526,20 @@ var
   testflag: integer;
   mmy: integer = 116;
   mmx: integer = 197;
+  imgclickstart: dword = 0;
   lastimgclick: dword = 0;
   lastloadformat: integer = 3;
   lsatsaveformat: integer = 4;
+  dragenabled: integer = 0;
+  snapenabled: integer = 0;
+  snapvalue: integer = 10;
+  OffsetX: single = 0.0;
+  OffsetY: single = 0.0;
+  OffsetZ: single = 0.0;
+  DefaultSect: integer = 0;
+  DefaultX: single = 0.0;
+  DefaultY: single = 0.0;
+  DefaultZ: single = 0.0;
 
 implementation
 
@@ -483,7 +547,7 @@ uses FTitle, FInfo, Unit1, FScrypt, TCom, FSetting, FEdit, Unit8, Unit9,
   Unit10, Unit11, PikaPackage, Unit12, Unit13, Unit14, Unit15, Unit16,
   Unit17, Unit18, Unit19, FCompat, MyConst, Unit29, crc32, EnemyStat,
   FEnemyAttack, FEnemyMov, FEnemyResist, FFloatEdit, NPCBuild, Unit22,
-  FFFilter, FMonsDet, Unit23, FSymbolChat, FAsmModeSel;
+  FFFilter, FMonsDet, Unit23, FSymbolChat, FAsmModeSel, FPlacement, FHotkeys;
 
 {$R *.dfm}
 
@@ -1983,12 +2047,15 @@ begin
     undocount := 0;
     ClearShadow;
     Button11.Enabled := false;
+    smUndo.Enabled := false;
     AsmMode := 0;
     eb1 := 0;
     eb2 := 0;
     curepi := 0;
     fillchar(BBData[0], sizeof(BBData), 0);
     MoveSel := -1;
+    lblStatus.Visible := false;
+    lblModifiers.Visible := false;
     path := extractfilepath(application.ExeName);
     fn := OpenDialog1.filename;
     FullQuestFile := fn;
@@ -2574,6 +2641,10 @@ var
 begin
   if CheckListBox1.ItemIndex >= 0 then
   begin
+    lblStatus.Visible := false;
+    lblModifiers.Visible := false;
+    Copylastmonster1.Enabled := false;
+    Copylastitem1.Enabled := false;
     ListBox1.Clear;
     ListBox2.Clear;
     Selected := -1;
@@ -2595,6 +2666,9 @@ begin
     Button2.Enabled := false;
     Button1.Enabled := false;
     Button3.Enabled := false;
+    smEdit.Enabled := false;
+    smDelete.Enabled := false;
+    smMove.Enabled := false;
     sfloor := CheckListBox1.ItemIndex;
     for x := 0 to Floor[sfloor].MonsterCount - 1 do
     begin
@@ -2625,7 +2699,6 @@ begin
     p := (5 / Zoom) * 100;
     Label6.Caption := GetLanguageString(38) + ' ' + inttostr(round(p)) + '%';
     DrawMap;
-
   end;
 end;
 
@@ -2654,10 +2727,15 @@ begin
     Selected := ListBox1.ItemIndex;
     ListBox2.ItemIndex := -1;
     MoveSel := -1;
+    lblStatus.Visible := false;
+    lblModifiers.Visible := false;
     stype := 1;
     Button2.Enabled := true;
     Button1.Enabled := true;
     Button3.Enabled := true;
+    smEdit.Enabled := true;
+    smDelete.Enabled := true;
+    smMove.Enabled := true;
     sms := Floor[sfloor].Monster[Selected].map_section;
     DrawMap;
     Image1.Canvas.FillRect(Image1.Canvas.ClipRect);
@@ -2723,10 +2801,15 @@ begin
   if ListBox2.ItemIndex >= 0 then
   begin
     Selected := ListBox2.ItemIndex;
+    lblStatus.Visible := false;
+    lblModifiers.Visible := false;
     MoveSel := -1;
     Button2.Enabled := true;
     Button1.Enabled := true;
     Button3.Enabled := true;
+    smEdit.Enabled := true;
+    smDelete.Enabled := true;
+    smMove.Enabled := true;
     ListBox1.ItemIndex := -1;
     sms := Floor[sfloor].Obj[Selected].map_section;
     stype := 2;
@@ -2798,6 +2881,11 @@ procedure TForm1.itle1Click(Sender: TObject);
 begin
   form2.Edit1.Text := Title;
   form2.ShowModal;
+end;
+
+procedure TForm1.Delete1Click(Sender: TObject);
+begin
+  Button3Click(nil);
 end;
 
 procedure TForm1.Description1Click(Sender: TObject);
@@ -3301,6 +3389,178 @@ begin
   end;
 end;
 
+procedure TForm1.Copyitem1Click(Sender: TObject);
+var
+  x, y: integer;
+begin
+  if (form10.ComboBox1.ItemIndex > -1) and (form10.tag = 1) then
+  begin
+    inc(Floor[sfloor].ObjCount);
+    for x := 0 to preseti - 1 do
+      if ObjTemplate[x].name = form10.ComboBox1.Text then
+        break;
+    for y := 0 to sizeof(TObj) - 1 do
+      pansichar(@Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1])[y] := pansichar(@ObjTemplate[x].data)[y];
+
+    if form10.UnicodestringGrid1.Visible then
+      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow8 := strtofloat(form10.UnicodestringGrid1.Cells[1, 0]);
+
+    if form10.UnicodeStringGrid2.Visible then
+    begin
+      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow8 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 0]);
+      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow9 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 1]);
+      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Unknow10 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 2]);
+    end;
+
+    // Set default position based on user's setting
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    lblStatus.Visible := true;
+    lblModifiers.Visible := true;
+    MoveSel := Floor[sfloor].ObjCount - 1;
+    MoveType := 2;
+    ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].Skin));
+    if have3d then
+    begin
+      MyObjCount := Floor[sfloor].ObjCount;
+      setlength(MyObj, MyObjCount);
+      MyObj[MoveSel] := nil;
+      Generateobj(Floor[sfloor].Obj[MoveSel], MoveSel);
+
+    end;
+    ctrldw := true;
+    firstdrop := true;
+    DrawMap;
+    isedited := true;
+  end;
+end;
+
+procedure TForm1.Copylastitem1Click(Sender: TObject);
+var
+x, y: integer;
+begin
+  if (form10.ComboBox1.ItemIndex > -1) and (form10.tag = 1) then
+  begin
+    inc(Floor[sfloor].ObjCount);
+    for x := 0 to preseti - 1 do
+      if ObjTemplate[x].name = form10.ComboBox1.Text then
+        break;
+    for y := 0 to sizeof(TObj) - 1 do
+      pansichar(@Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1])[y] := pansichar(@ObjTemplate[x].data)[y];
+
+    if form10.UnicodestringGrid1.Visible then
+      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow8 := strtofloat(form10.UnicodestringGrid1.Cells[1, 0]);
+
+    if form10.UnicodeStringGrid2.Visible then
+    begin
+      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow8 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 0]);
+      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].unknow9 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 1]);
+      Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Unknow10 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 2]);
+    end;
+
+    // Set default position based on user's setting
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    lblStatus.Visible := true;
+    lblModifiers.Visible := true;
+    MoveSel := Floor[sfloor].ObjCount - 1;
+    MoveType := 2;
+    ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].Skin));
+    if have3d then
+    begin
+      MyObjCount := Floor[sfloor].ObjCount;
+      setlength(MyObj, MyObjCount);
+      MyObj[MoveSel] := nil;
+      Generateobj(Floor[sfloor].Obj[MoveSel], MoveSel);
+
+    end;
+    ctrldw := true;
+    firstdrop := true;
+    DrawMap;
+    isedited := true;
+  end;
+end;
+
+procedure TForm1.Copylastmonster1Click(Sender: TObject);
+var
+  x, y: integer;
+begin
+  if (form9.ComboBox1.ItemIndex > -1) and (form9.tag = 1) then
+  begin
+    inc(Floor[sfloor].MonsterCount);
+    for x := 0 to presetm - 1 do
+      if MonsterTemplate[x].name = form9.ComboBox1.Text then
+        break;
+    for y := 0 to sizeof(TMonster) - 1 do
+      pansichar(@Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1])[y] := pansichar(@MonsterTemplate[x].data)[y];
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Unknow5 := form9.SpinEdit1.value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow6 := form9.SpinEdit1.value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
+
+    // Set default position based on user's setting
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    lblStatus.Visible := true;
+    lblModifiers.Visible := true;
+    MoveSel := Floor[sfloor].MonsterCount - 1;
+    MoveType := 1;
+    firstdrop := true;
+    if have3d then
+      ListBox1.Items.Add('#' + inttostr(MoveSel) + ' - ' + GenerateMonsterName(Floor[sfloor].Monster[MoveSel],
+        MoveSel, 1))
+    else
+      ListBox1.Items.Add('#' + inttostr(MoveSel) + ' - ' + GenerateMonsterName(Floor[sfloor].Monster[MoveSel],
+        MoveSel, 0));
+    DrawMap;
+    ctrldw := true;
+    isedited := true;
+  end;
+end;
+
+procedure TForm1.Copymonster1Click(Sender: TObject);
+var
+  x, y: integer;
+begin
+  if (form9.ComboBox1.ItemIndex > -1) and (form9.tag = 1) then
+  begin
+    inc(Floor[sfloor].MonsterCount);
+    for x := 0 to presetm - 1 do
+      if MonsterTemplate[x].name = form9.ComboBox1.Text then
+        break;
+    for y := 0 to sizeof(TMonster) - 1 do
+      pansichar(@Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1])[y] := pansichar(@MonsterTemplate[x].data)[y];
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Unknow5 := form9.SpinEdit1.value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow6 := form9.SpinEdit1.value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
+
+    // Set default position based on user's setting
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    lblStatus.Visible := true;
+    lblModifiers.Visible := true;
+    MoveSel := Floor[sfloor].MonsterCount - 1;
+    MoveType := 1;
+    firstdrop := true;
+    if have3d then
+      ListBox1.Items.Add('#' + inttostr(MoveSel) + ' - ' + GenerateMonsterName(Floor[sfloor].Monster[MoveSel],
+        MoveSel, 1))
+    else
+      ListBox1.Items.Add('#' + inttostr(MoveSel) + ' - ' + GenerateMonsterName(Floor[sfloor].Monster[MoveSel],
+        MoveSel, 0));
+    DrawMap;
+    ctrldw := true;
+    isedited := true;
+  end;
+end;
+
 procedure TForm1.ViewScrypt1Click(Sender: TObject);
 begin
   form4.Show;
@@ -3331,7 +3591,107 @@ begin
 end;
 
 procedure TForm1.Image2MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; x, y: integer);
+var
+  z, l: Integer;
+  px, px2, py, py2: Double;
 begin
+  if (Button = mbleft) and (smDrag.checked) then
+  begin
+    imgclickstart := gettickcount();
+    // Drag monsters
+    for z := 0 to Floor[sfloor].MonsterCount - 1 do
+      if (Floor[sfloor].Monster[z].Unknow5 = showwave) or (showwave = -1) then
+      begin
+        if extractfilename(mapfilenam) = 'map_boss03c.rel' then
+        begin
+          MidP[0].y := 0;
+        end;
+        px2 := Floor[sfloor].Monster[z].Pos_X / Zoom;
+        py2 := Floor[sfloor].Monster[z].Pos_Y / Zoom;
+        px := cos(-rev[Floor[sfloor].Monster[z].map_section] / 10430.37835) * px2 -
+          sin(-rev[Floor[sfloor].Monster[z].map_section] / 10430.37835) * py2;
+        py := sin(-rev[Floor[sfloor].Monster[z].map_section] / 10430.37835) * px2 +
+          cos(-rev[Floor[sfloor].Monster[z].map_section] / 10430.37835) * py2;
+
+        px2 := mpx;
+        px2 := px2 / Zoom;
+        px := px + mmx + MidP[Floor[sfloor].Monster[z].map_section].x + px2;
+        px2 := mpy;
+        px2 := px2 / Zoom;
+        py := py + mmy + MidP[Floor[sfloor].Monster[z].map_section].y + px2;
+
+        if (mpcx >= round(px) - round(6 / Zoom)) and (mpcx <= round(px) + round(6 / Zoom)) and
+          (mpcy >= round(py) - round(6 / Zoom)) and (mpcy <= round(py) + round(6 / Zoom)) then
+          begin
+            l := ListBox1.ItemIndex;
+            ListBox1.ItemIndex := z;
+            if have3d and shiftdown then
+            begin
+              ppx := midpz[Floor[sfloor].Monster[z].map_section].x;
+              ppy := Floor[sfloor].Monster[z].Pos_Z + 15;
+              ppz := -midpz[Floor[sfloor].Monster[z].map_section].y;
+              vr := 0;
+              vz := 0;
+              myscreen.SetView(ppx, ppy, ppz, vr, vz);
+            end;
+            if gettickcount() - lastimgclick > 1000 then
+              l := -1;
+            if l = ListBox1.ItemIndex then
+              Form1.ListBox1DblClick(Form1)
+            else
+              Form1.ListBox1Click(Form1);
+              lastimgclick := gettickcount();
+              mdrag := 1;
+            end;
+      end;
+      // Drag objects
+      for z := 0 to Floor[sfloor].ObjCount - 1 do
+      if (Floor[sfloor].Obj[z].grp = showgrp) or (showgrp = -1) then
+      begin
+        if extractfilename(mapfilenam) = 'map_boss03c.rel' then
+        begin
+          MidP[0].y := 0;
+        end;
+        px2 := Floor[sfloor].Obj[z].Pos_X / Zoom;
+        py2 := Floor[sfloor].Obj[z].Pos_Y / Zoom;
+        px := cos(-rev[Floor[sfloor].Obj[z].map_section] / 10430.37835) * px2 -
+          sin(-rev[Floor[sfloor].Obj[z].map_section] / 10430.37835) * py2;
+        py := sin(-rev[Floor[sfloor].Obj[z].map_section] / 10430.37835) * px2 +
+          cos(-rev[Floor[sfloor].Obj[z].map_section] / 10430.37835) * py2;
+
+        px2 := mpx;
+        px2 := px2 / Zoom;
+        px := px + mmx + MidP[Floor[sfloor].Obj[z].map_section].x + px2;
+        px2 := mpy;
+        px2 := px2 / Zoom;
+        py := py + mmy + MidP[Floor[sfloor].Obj[z].map_section].y + px2;
+
+        if (mpcx >= round(px) - round(6 / Zoom)) and (mpcx <= round(px) + round(6 / Zoom)) and
+          (mpcy >= round(py) - round(6 / Zoom)) and (mpcy <= round(py) + round(6 / Zoom)) then
+        begin
+            l := ListBox2.ItemIndex;
+            ListBox2.ItemIndex := z;
+            if have3d and shiftdown then
+            begin
+              ppx := midpz[Floor[sfloor].Obj[z].map_section].x;
+              ppy := Floor[sfloor].Obj[z].Pos_Z + 15;
+              ppz := -midpz[Floor[sfloor].Obj[z].map_section].y;
+              vr := 0;
+              vz := 0;
+              myscreen.SetView(ppx, ppy, ppz, vr, vz);
+            end;
+            if gettickcount() - lastimgclick > 1000 then
+              l := -1;
+            if l = ListBox2.ItemIndex then
+              Form1.ListBox1DblClick(Form1)
+            else
+              Form1.ListBox2Click(Form1);
+              lastimgclick := gettickcount();
+              mdrag := 1;
+            end;
+      end;
+  end;
+
   ctrldw := false;
   shiftdown := true;
   shiftdw := false;
@@ -3352,11 +3712,27 @@ begin
     lmpx := x;
     lmpy := y;
     mdown := 1;
-  end;
+  end
 end;
 
 procedure TForm1.Image2MouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; x, y: integer);
 begin
+  if (Button = mbleft) and (smDrag.Checked) and (mdrag = 1) and (gettickcount() - imgclickstart >= 300) then
+  begin
+    MoveSel := -1;
+    lblStatus.Visible := false;
+    lblModifiers.Visible := false;
+    if Selected > -1 then
+    begin
+      lblStatus.Visible := true;
+      lblModifiers.Visible := true;
+      MoveSel := Selected;
+      MoveType := stype;
+      isedited := true;
+      Image2Click(nil);
+      mdrag := 0;
+    end;
+  end;
   if mdown = 1 then
     Image2.PopupMenu.Popup(mouse.CursorPos.x, mouse.CursorPos.y);
   mdown := 0;
@@ -3749,6 +4125,26 @@ begin
           lastloadformat := Reg.ReadInteger('LoadFrom');
         if Reg.ValueExists('SaveTo') then
           lsatsaveformat := Reg.ReadInteger('SaveTo');
+        if Reg.ValueExists('DragEnabled') then
+          dragenabled := Reg.ReadInteger('DragEnabled');
+        if Reg.ValueExists('SnapEnabled') then
+          snapenabled := Reg.ReadInteger('SnapEnabled');
+        if Reg.ValueExists('SnapValue') then
+          snapvalue := Reg.ReadInteger('SnapValue');
+        if Reg.ValueExists('OffsetX') then
+          OffsetX := Reg.ReadFloat('OffsetX');
+        if Reg.ValueExists('OffsetY') then
+          OffsetY := Reg.ReadFloat('OffsetY');
+        if Reg.ValueExists('OffsetZ') then
+          OffsetZ := Reg.ReadFloat('OffsetZ');
+        if Reg.ValueExists('DefaultSect') then
+          DefaultSect := Reg.ReadInteger('DefaultSect');
+        if Reg.ValueExists('DefaultX') then
+          DefaultX := Reg.ReadFloat('DefaultX');
+        if Reg.ValueExists('DefaultY') then
+          DefaultY := Reg.ReadFloat('DefaultY');
+        if Reg.ValueExists('DefaultZ') then
+          DefaultZ := Reg.ReadFloat('DefaultZ');
         Reg.CloseKey;
       end;
       Reg.Free;
@@ -3869,6 +4265,22 @@ begin
       PikaGetFile(flp, 'fra.txt', path + 'config.ppk', 'Build By Schthack');
     if mylang = 2 then
       PikaGetFile(flp, 'spa.txt', path + 'config.ppk', 'Build By Schthack');
+
+    if dragenabled = 1 then
+      smDrag.Checked := true
+    else smDrag.Checked := false;
+    if snapenabled = 1 then
+      smSnap.Checked := true
+    else smSnap.Checked := false;
+    FPlacementOptions.seSnapTolerance.Value := snapvalue;
+    FPlacementOptions.nbOffsetX.Value := OffsetX;
+    FPlacementOptions.nbOffsetY.Value := OffsetY;
+    FPlacementOptions.nbOffsetZ.Value := OffsetZ;
+    FPlacementOptions.seDefaultSect.Value := DefaultSect;
+    FPlacementOptions.nbDefaultX.Value := DefaultX;
+    FPlacementOptions.nbDefaultY.Value := DefaultY;
+    FPlacementOptions.nbDefaultZ.Value := DefaultZ;
+
     flp.Position := 0;
     LanguageString.LoadFromStream(flp);
     SetInterfaceText;
@@ -4858,6 +5270,8 @@ begin
   begin
     s := Selected;
     isedited := true;
+    lblStatus.Visible := false;
+    lblModifiers.Visible := false;
     MoveSel := -1;
     SetUndow;
     if stype = 1 then
@@ -4907,6 +5321,9 @@ begin
         Button2.Enabled := true;
         Button1.Enabled := true;
         Button3.Enabled := true;
+        smEdit.Enabled := true;
+        smDelete.Enabled := true;
+        smMove.Enabled := true;
       end;
     end;
     if stype = 2 then
@@ -4918,6 +5335,9 @@ begin
         Button2.Enabled := true;
         Button1.Enabled := true;
         Button3.Enabled := true;
+        smEdit.Enabled := true;
+        smDelete.Enabled := true;
+        smMove.Enabled := true;
       end;
     end;
     DrawMap;
@@ -4974,6 +5394,7 @@ begin
   form10.ShowModal;
   if (form10.ComboBox1.ItemIndex > -1) and (form10.tag = 1) then
   begin
+    Copylastitem1.Enabled := true;
     inc(Floor[sfloor].ObjCount);
     for x := 0 to preseti - 1 do
       if ObjTemplate[x].name = form10.ComboBox1.Text then
@@ -4991,6 +5412,13 @@ begin
       Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Unknow10 := strtofloat(form10.UnicodeStringGrid2.Cells[1, 2]);
     end;
 
+    // Set default position based on user's setting
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+    Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    lblStatus.Visible := true;
+    lblModifiers.Visible := true;
     MoveSel := Floor[sfloor].ObjCount - 1;
     MoveType := 2;
     ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].Skin));
@@ -5062,6 +5490,7 @@ begin
   form9.ShowModal;
   if (form9.ComboBox1.ItemIndex > -1) and (form9.tag = 1) then
   begin
+    Copylastmonster1.Enabled := true;
     inc(Floor[sfloor].MonsterCount);
     for x := 0 to presetm - 1 do
       if MonsterTemplate[x].name = form9.ComboBox1.Text then
@@ -5071,6 +5500,14 @@ begin
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Unknow5 := form9.SpinEdit1.value;
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow6 := form9.SpinEdit1.value;
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
+
+    // Set default position based on user's setting
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].map_section := FPlacementOptions.seDefaultSect.Value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_X := FPlacementOptions.nbDefaultX.Value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+    Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+    lblStatus.Visible := true;
+    lblModifiers.Visible := true;
     MoveSel := Floor[sfloor].MonsterCount - 1;
     MoveType := 1;
     firstdrop := true;
@@ -5203,11 +5640,14 @@ end;
 
 procedure TForm1.Image2Click(Sender: TObject);
 var
-  x, d, pz, i, z, y, l: integer;
+  x, d, pz, i, z, y, j, l: integer;
   px, py, px2, py2, di, pz2: double;
 begin
   if MoveSel > -1 then
   begin
+    snapvalue := FPlacementOptions.seSnapTolerance.Value;
+    lblStatus.Visible := false;
+    lblModifiers.Visible := false;
     // find the nearest zone
     // extract the real px, py
     SetUndow;
@@ -5218,13 +5658,17 @@ begin
         inc(Floor[sfloor].MonsterCount);
         if have3d then
         begin
+          Form1.Listbox1.Items.Strings[MoveSel]:='#'+inttostr(MoveSel)+' - ' + GenerateMonsterName(Floor[sfloor].Monster[MoveSel],MoveSel,2); // Refresh monster name
           setlength(MyMonst, Floor[sfloor].MonsterCount);
           MyMonstCount := Floor[sfloor].MonsterCount;
           MyMonst[Floor[sfloor].MonsterCount - 1] := t3ditem.Create(myscreen);
-        end;
+        end
+        else Form1.Listbox1.Items.Strings[MoveSel]:='#'+inttostr(MoveSel)+' - ' + GenerateMonsterName(Floor[sfloor].Monster[MoveSel],MoveSel,0);
         for x := 0 to sizeof(TMonster) - 1 do
           pansichar(@Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1])[x] :=
             pansichar(@Floor[sfloor].Monster[MoveSel])[x];
+        lblStatus.Visible := true;
+        lblModifiers.Visible := true;
         MoveSel := Floor[sfloor].MonsterCount - 1;
       end;
       if MoveType = 2 then
@@ -5236,8 +5680,11 @@ begin
           MyObjCount := Floor[sfloor].ObjCount;
           MyObj[Floor[sfloor].ObjCount - 1] := nil;
         end;
+        Form1.ListBox2.Items.Strings[MoveSel]:='#'+inttostr(MoveSel)+' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].skin); // Refresh object name
         for x := 0 to sizeof(TObj) - 1 do
           pansichar(@Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1])[x] := pansichar(@Floor[sfloor].Obj[MoveSel])[x];
+        lblStatus.Visible := true;
+        lblModifiers.Visible := true;
         MoveSel := Floor[sfloor].ObjCount - 1;
       end;
     end;
@@ -5247,6 +5694,7 @@ begin
     py := mpy;
     py := py / Zoom;
     py := mpcy - mmy - py;
+
     // py:=py+116+midp[Floor[sfloor].Monster[x].map_section].y+px2;
     if shiftdw then
     begin
@@ -5279,8 +5727,8 @@ begin
         d := strtoint(Form1.ComboBox1.Items.Strings[Form1.ComboBox1.ItemIndex]);
 
     end;
-    // section found save the data to the object/monster
 
+    // section found save the data to the object/monster
     pz2 := YFromBBRELFile(px * Zoom, py * Zoom);
     pz2 := pz2 - miz[d];
 
@@ -5292,7 +5740,6 @@ begin
 
     px := px * Zoom;
     py := py * Zoom;
-
     // pz:=$0;
 
     if MoveType = 1 then
@@ -5300,9 +5747,66 @@ begin
       Floor[sfloor].Monster[MoveSel].map_section := d;
       Floor[sfloor].Monster[MoveSel].Pos_X := px;
       Floor[sfloor].Monster[MoveSel].Pos_Y := py;
+
+      if (smSnap.Checked) or (sdown) then // S key
+      begin
+        // Vertical snap for monsters
+        for j := 0 to Floor[sfloor].MonsterCount - 1 do
+        begin
+          for i := 0 to snapvalue do
+          begin
+              // Make sure both are visible and sections are the same
+              if (Floor[sfloor].Monster[j].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+              ((Floor[sfloor].Monster[j].Unknow5 = showwave) or (showwave = -1)) then
+              begin
+                if ((round(Floor[sfloor].Monster[j].Pos_X + i)) = round(px))
+                or ((round(Floor[sfloor].Monster[j].Pos_X - i)) = round(px)) then
+                begin
+                  Floor[sfloor].Monster[MoveSel].Pos_X := Floor[sfloor].Monster[j].Pos_X;
+                end;
+              end;
+          end;
+        end;
+
+        // Horizontal snap for monsters
+        for j := 0 to Floor[sfloor].MonsterCount - 1 do
+        begin
+          for i := 0 to snapvalue do
+          begin
+              // Make sure both are visible and sections are the same
+              if (Floor[sfloor].Monster[j].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+              ((Floor[sfloor].Monster[j].Unknow5 = showwave) or (showwave = -1)) then
+              begin
+                if ((round(Floor[sfloor].Monster[j].Pos_Y + i)) = round(py))
+                or ((round(Floor[sfloor].Monster[j].Pos_Y - i)) = round(py)) then
+                begin
+                  Floor[sfloor].Monster[MoveSel].Pos_Y := Floor[sfloor].Monster[j].Pos_Y;
+                end;
+              end;
+          end;
+        end;
+      end;
+
       // look around to find the best pz
       if not altdw or firstdrop then
         Floor[sfloor].Monster[MoveSel].Pos_Z := pz2;
+
+      // Placement modifiers - overwrite values if keys are pressed
+      if (Selected > -1) and (fdown) then // F key
+      begin
+        Floor[sfloor].Monster[MoveSel].map_section := Floor[sfloor].Monster[Selected].map_section;
+        Floor[sfloor].Monster[MoveSel].Pos_X := Floor[sfloor].Monster[Selected].Pos_X + FPlacementOptions.nbOffsetX.Value;
+        Floor[sfloor].Monster[MoveSel].Pos_Y := Floor[sfloor].Monster[Selected].Pos_Y + FPlacementOptions.nbOffsetZ.Value;
+        Floor[sfloor].Monster[MoveSel].Pos_Z := Floor[sfloor].Monster[Selected].Pos_Z + FPlacementOptions.nbOffsetY.Value;
+      end
+      else if ddown then // D key
+      begin
+        Floor[sfloor].Monster[MoveSel].map_section := FPlacementOptions.seDefaultSect.Value;
+        Floor[sfloor].Monster[MoveSel].Pos_X := FPlacementOptions.nbDefaultX.Value;
+        Floor[sfloor].Monster[MoveSel].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+        Floor[sfloor].Monster[MoveSel].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+      end;
+
       if have3d then
       begin
         GenerateMonsterName(Floor[sfloor].Monster[MoveSel], MoveSel, 2);
@@ -5314,8 +5818,65 @@ begin
       Floor[sfloor].Obj[MoveSel].map_section := d;
       Floor[sfloor].Obj[MoveSel].Pos_X := px;
       Floor[sfloor].Obj[MoveSel].Pos_Y := py;
+
+      if (smSnap.Checked) or (sdown) then // S key
+      begin
+        // Vertical snap for objects
+        for j := 0 to Floor[sfloor].ObjCount - 1 do
+        begin
+          for i := 0 to snapvalue do
+          begin
+              // Make sure both are visible and sections are the same
+              if (Floor[sfloor].Obj[j].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+              ((Floor[sfloor].Obj[j].Unknow5 = showwave) or (showwave = -1)) then
+              begin
+                if ((round(Floor[sfloor].Obj[j].Pos_X + i)) = round(px))
+                or ((round(Floor[sfloor].Obj[j].Pos_X - i)) = round(px)) then
+                begin
+                  Floor[sfloor].Obj[MoveSel].Pos_X := Floor[sfloor].Obj[j].Pos_X;
+                end;
+              end;
+          end;
+        end;
+
+        // Horizontal snap for objects
+        for j := 0 to Floor[sfloor].ObjCount - 1 do
+        begin
+          for i := 0 to snapvalue do
+          begin
+              // Make sure both are visible and sections are the same
+              if (Floor[sfloor].Obj[j].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+              ((Floor[sfloor].Obj[j].Unknow5 = showwave) or (showwave = -1)) then
+              begin
+                if ((round(Floor[sfloor].Obj[j].Pos_Y + i)) = round(py))
+                or ((round(Floor[sfloor].Obj[j].Pos_Y - i)) = round(py)) then
+                begin
+                  Floor[sfloor].Obj[MoveSel].Pos_Y := Floor[sfloor].Obj[j].Pos_Y;
+                end;
+              end;
+          end;
+        end;
+      end;
+
       if not altdw or firstdrop then
         Floor[sfloor].Obj[MoveSel].Pos_Z := pz2;
+
+      // Placement modifiers - overwrite values if keys are pressed
+      if (Selected > -1) and (fdown) then // F key
+      begin
+        Floor[sfloor].Obj[MoveSel].map_section := Floor[sfloor].Obj[Selected].map_section;
+        Floor[sfloor].Obj[MoveSel].Pos_X := Floor[sfloor].Obj[Selected].Pos_X + FPlacementOptions.nbOffsetX.Value;
+        Floor[sfloor].Obj[MoveSel].Pos_Y := Floor[sfloor].Obj[Selected].Pos_Y + FPlacementOptions.nbOffsetZ.Value;
+        Floor[sfloor].Obj[MoveSel].Pos_Z := Floor[sfloor].Obj[Selected].Pos_Z + FPlacementOptions.nbOffsetY.Value;
+      end
+      else if ddown then // D key
+      begin
+        Floor[sfloor].Obj[MoveSel].map_section := FPlacementOptions.seDefaultSect.Value;
+        Floor[sfloor].Obj[MoveSel].Pos_X := FPlacementOptions.nbDefaultX.Value;
+        Floor[sfloor].Obj[MoveSel].Pos_Y := FPlacementOptions.nbDefaultZ.Value;
+        Floor[sfloor].Obj[MoveSel].Pos_Z := FPlacementOptions.nbDefaultY.Value;
+      end;
+
       if have3d then
       begin
         if MyObj[MoveSel] <> nil then
@@ -5326,6 +5887,8 @@ begin
       end;
       ListBox2Click(Form1);
     end;
+    lblStatus.Visible := false;
+    lblModifiers.Visible := false;
     MoveSel := -1;
     firstdrop := false;
     if ctrldw then
@@ -5333,6 +5896,8 @@ begin
       // Form1.CheckListBox1Click(form1);
       if MoveType = 1 then
       begin
+        lblStatus.Visible := true;
+        lblModifiers.Visible := true;
         MoveSel := Floor[sfloor].MonsterCount - 1;
         ListBox1.Items.Add('#' + inttostr(MoveSel) + ' - ' + GenerateMonsterName(Floor[sfloor].Monster[Selected],
           Selected, 0));
@@ -5340,6 +5905,8 @@ begin
       end;
       if MoveType = 2 then
       begin
+        lblStatus.Visible := true;
+        lblModifiers.Visible := true;
         MoveSel := Floor[sfloor].ObjCount - 1;
         ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[Selected].Skin));
         Selected := MoveSel;
@@ -5374,7 +5941,8 @@ begin
         py := py + mmy + MidP[Floor[sfloor].Monster[x].map_section].y + px2;
 
         if (mpcx >= round(px) - round(6 / Zoom)) and (mpcx <= round(px) + round(6 / Zoom)) and
-          (mpcy >= round(py) - round(6 / Zoom)) and (mpcy <= round(py) + round(6 / Zoom)) then
+          (mpcy >= round(py) - round(6 / Zoom)) and (mpcy <= round(py) + round(6 / Zoom))
+          and not smDrag.Checked then
         begin
           l := ListBox1.ItemIndex;
           ListBox1.ItemIndex := x;
@@ -5419,7 +5987,8 @@ begin
         py := py + mmy + MidP[Floor[sfloor].Obj[x].map_section].y + px2;
 
         if (mpcx >= round(px) - round(6 / Zoom)) and (mpcx <= round(px) + round(6 / Zoom)) and
-          (mpcy >= round(py) - round(6 / Zoom)) and (mpcy <= round(py) + round(6 / Zoom)) then
+          (mpcy >= round(py) - round(6 / Zoom)) and (mpcy <= round(py) + round(6 / Zoom))
+          and not smDrag.Checked then
         begin
           l := ListBox2.ItemIndex;
           ListBox2.ItemIndex := x;
@@ -5439,9 +6008,9 @@ begin
           else
             Form1.ListBox2Click(Form1);
         end;
-
       end;
-    lastimgclick := gettickcount();
+      if not smDrag.Checked then
+        lastimgclick := gettickcount();
   end;
 end;
 
@@ -5557,6 +6126,7 @@ begin
   isedited := false;
   undocount := 0;
   Button11.Enabled := false;
+  smUndo.Enabled := false;
   TrFnc.DeleteChildren;
   TrData.DeleteChildren;
   TrReg.DeleteChildren;
@@ -5609,6 +6179,7 @@ begin
   isedited := false;
   undocount := 0;
   Button11.Enabled := false;
+  smUndo.Enabled := false;
   TrFnc.DeleteChildren;
   TrData.DeleteChildren;
   TrReg.DeleteChildren;
@@ -5661,6 +6232,7 @@ begin
   isedited := false;
   undocount := 0;
   Button11.Enabled := false;
+  smUndo.Enabled := false;
   TrFnc.DeleteChildren;
   TrData.DeleteChildren;
   TrReg.DeleteChildren;
@@ -5711,7 +6283,10 @@ begin
     exit;
   dec(undocount);
   if undocount = 0 then
+  begin
     Button11.Enabled := false;
+    smUndo.Enabled := false;
+  end;
   isedited := true;
   move(FloorUn[undocount], Floor[0], sizeof(TFloor) * 40);
   ctrldw := true;
@@ -5724,6 +6299,7 @@ var
   x: integer;
 begin
   Button11.Enabled := true;
+  smUndo.Enabled := true;
   if undocount = 20 then
   begin
     dec(undocount);
@@ -5736,9 +6312,13 @@ end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
+  lblStatus.Visible := false;
+  lblModifiers.Visible := false;
   MoveSel := -1;
   if Selected > -1 then
   begin
+    lblStatus.Visible := true;
+    lblModifiers.Visible := true;
     MoveSel := Selected;
     MoveType := stype;
     isedited := true;
@@ -6197,7 +6777,24 @@ begin
   // MenueDrawItemX(form1.MainMenu1);
   have3d := false;
   s := dummy1 + dummy2 + dummy3 + dummy4 + dummy5 + dummy6 + dummy7 + dummy8;
+end;
 
+procedure TForm1.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key = 68 then
+    ddown := true;
+  if key = 70 then
+    fdown := true;
+  if key = 83 then
+    sdown := true;
+end;
+
+procedure TForm1.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  ddown := false;
+  fdown := false;
+  sdown := false;
 end;
 
 procedure TForm1.DrawItem(Sender: TObject; ACanvas: TCanvas; ARect: TRect; Selected: Boolean);
@@ -6233,6 +6830,11 @@ end;
 procedure TForm1.Monstercount1Click(Sender: TObject);
 begin
   form31.ShowModal;
+end;
+
+procedure TForm1.Move1Click(Sender: TObject);
+begin
+  Button1Click(nil);
 end;
 
 procedure MenueDrawItem(Sender: TObject; ACanvas: TCanvas; ARect: TRect; Selected: Boolean);
@@ -6529,6 +7131,125 @@ begin
   load3d;
 end;
 
+procedure TForm1.Newitem1Click(Sender: TObject);
+begin
+  Button4Click(nil);
+end;
+
+procedure TForm1.Newmonster1Click(Sender: TObject);
+begin
+  Button9Click(nil);
+end;
+
+procedure TForm1.smNewItemClick(Sender: TObject);
+begin
+  Button4Click(nil);
+end;
+
+procedure TForm1.smNewMonsterClick(Sender: TObject);
+begin
+  Button9Click(nil);
+end;
+
+procedure TForm1.smPlacementClick(Sender: TObject);
+begin
+  FPlacementOptions.showmodal();
+end;
+
+procedure TForm1.smDeleteClick(Sender: TObject);
+begin
+  Button3Click(nil);
+end;
+
+procedure TForm1.smDragClick(Sender: TObject);
+var
+  Reg: TRegistry;
+begin
+  Reg := TRegistry.Create;
+  if smDrag.Checked then
+  begin
+    smDrag.Checked := false;
+    try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
+    begin
+      Reg.WriteInteger('DragEnabled', 0);
+      Reg.CloseKey;
+    end;
+    finally
+    Reg.Free;
+    inherited;
+  end;
+  end
+  else
+  begin
+    smDrag.Checked := true;
+    try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
+    begin
+      Reg.WriteInteger('DragEnabled', 1);
+      Reg.CloseKey;
+    end;
+    finally
+    Reg.Free;
+    inherited;
+  end;
+  end;
+end;
+
+procedure TForm1.smEditClick(Sender: TObject);
+begin
+  Button2Click(nil);
+end;
+
+procedure TForm1.smMoveClick(Sender: TObject);
+begin
+  Button1Click(nil);
+end;
+
+procedure TForm1.smSnapClick(Sender: TObject);
+var
+  Reg: TRegistry;
+begin
+  Reg := TRegistry.Create;
+  if smSnap.Checked then
+  begin
+    smSnap.Checked := false;
+    try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
+    begin
+      Reg.WriteInteger('SnapEnabled', 0);
+      Reg.CloseKey;
+    end;
+    finally
+    Reg.Free;
+    inherited;
+  end;
+  end
+  else
+  begin
+    smSnap.Checked := true;
+    try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
+    begin
+      Reg.WriteInteger('SnapEnabled', 1);
+      Reg.CloseKey;
+    end;
+    finally
+    Reg.Free;
+    inherited;
+  end;
+  end;
+end;
+
+procedure TForm1.smUndoClick(Sender: TObject);
+begin
+  Button11Click(nil);
+end;
+
 {
 
   Lee John Langan: i list them as uknown
@@ -6794,6 +7515,11 @@ begin
   form18.Show;
 end;
 
+procedure TForm1.Options1Click(Sender: TObject);
+begin
+  FPlacementOptions.showmodal();
+end;
+
 {
   3, 321
 
@@ -6802,7 +7528,12 @@ end;
 procedure TForm1.help1Click(Sender: TObject);
 begin
   if Form1.Active then
-    ShellExecute(0, 'open', 'http://qedit.schtserv.com', '', '', 0);
+    ShellExecute(0, 'open', 'https://qedit.info/', '', '', 0);
+end;
+
+procedure TForm1.Hotkeys1Click(Sender: TObject);
+begin
+  fmHotkeys.ShowModal;
 end;
 
 procedure TForm1.FormMouseWheelDown(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
@@ -6827,6 +7558,11 @@ begin
     Handled := true;
     Button6Click(self);
   end;
+end;
+
+procedure TForm1.PlacementOptions1Click(Sender: TObject);
+begin
+  FPlacementOptions.ShowModal;
 end;
 
 procedure TForm1.PopupMenu1Popup(Sender: TObject);
@@ -6865,6 +7601,11 @@ begin
     tm.OnClick := Itemsgroupe1Click;
     Itemsgroupe1.Add(tm);
   end;
+end;
+
+procedure TForm1.Edit1Click(Sender: TObject);
+begin
+  Button2Click(nil);
 end;
 
 procedure TForm1.EnemyWave1Click(Sender: TObject);
@@ -7436,6 +8177,11 @@ begin
 
 end;
 
+procedure TForm1.lblModifiersClick(Sender: TObject);
+begin
+  fmHotkeys.ShowModal;
+end;
+
 procedure TForm1.Checkforupdates1Click(Sender: TObject);
 begin
   // make it look for updates
@@ -7458,6 +8204,13 @@ begin
   DrawMap;
 end;
 
+procedure TForm1.Cancelplacement1Click(Sender: TObject);
+begin
+  MoveSel := -1;
+  lblStatus.Visible := false;
+  lblModifiers.Visible := false;
+end;
+
 procedure TForm1.CheckBox1Click(Sender: TObject);
 begin
   DrawMap;
@@ -7467,6 +8220,11 @@ procedure TForm1.Timer1Timer(Sender: TObject);
 begin
   if isedited then
     CreateShadow;
+end;
+
+procedure TForm1.Undo1Click(Sender: TObject);
+begin
+  Button11Click(nil);
 end;
 
 procedure TForm1.English1Click(Sender: TObject);

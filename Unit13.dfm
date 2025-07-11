@@ -10,7 +10,6 @@ object Form13: TForm13
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   OnClose = FormClose
   OnHide = FormHide
   OnKeyDown = FormKeyDown
@@ -20,7 +19,6 @@ object Form13: TForm13
   OnMouseMove = FormMouseMove
   OnMouseUp = FormMouseUp
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Timer1: TTimer
     Interval = 25

@@ -11,9 +11,7 @@ object Form9: TForm9
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 170
@@ -41,7 +39,6 @@ object Form9: TForm9
     Width = 165
     Height = 22
     Style = csOwnerDrawFixed
-    ItemHeight = 16
     Sorted = True
     TabOrder = 0
     OnChange = ComboBox1Change
@@ -52,6 +49,7 @@ object Form9: TForm9
     Width = 75
     Height = 25
     Caption = 'Add'
+    Default = True
     TabOrder = 1
     OnClick = Button1Click
   end
@@ -60,6 +58,7 @@ object Form9: TForm9
     Top = 132
     Width = 75
     Height = 25
+    Cancel = True
     Caption = 'Cancel'
     TabOrder = 2
     OnClick = Button2Click

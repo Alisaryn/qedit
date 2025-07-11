@@ -1,7 +1,7 @@
 object Form1: TForm1
   Left = 195
   Top = 115
-  Caption = 'Quest Editor V 1.0b Public'
+  Caption = 'Quest Editor V 1.0c Public'
   ClientHeight = 481
   ClientWidth = 723
   Color = clBtnFace
@@ -12,10 +12,12 @@ object Form1: TForm1
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
+  KeyPreview = True
   Menu = MainMenu1
-  OldCreateOrder = False
   OnClose = FormClose
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
+  OnKeyUp = FormKeyUp
   OnMouseWheelDown = FormMouseWheelDown
   OnMouseWheelUp = FormMouseWheelUp
   OnResize = FormResize
@@ -23,7 +25,6 @@ object Form1: TForm1
   DesignSize = (
     723
     481)
-  PixelsPerInch = 96
   TextHeight = 13
   object Label3: TLabel
     Left = 468
@@ -68,6 +69,38 @@ object Form1: TForm1
     Width = 47
     Height = 13
     Caption = 'Monster : '
+  end
+  object lblStatus: TLabel
+    Left = 308
+    Top = 464
+    Width = 70
+    Height = 13
+    Caption = '[Click to place]'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    Visible = False
+  end
+  object lblModifiers: TLabel
+    Left = 384
+    Top = 464
+    Width = 48
+    Height = 13
+    Cursor = crHandPoint
+    Caption = '(Modifiers)'
+    Color = clBtnFace
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsUnderline]
+    ParentColor = False
+    ParentFont = False
+    Visible = False
+    OnClick = lblModifiersClick
   end
   object GroupBox1: TGroupBox
     Left = 0
@@ -167,8 +200,8 @@ object Form1: TForm1
     end
   end
   object ListBox2: TListBox
-    Left = 464
-    Top = 24
+    Left = 463
+    Top = 25
     Width = 257
     Height = 137
     BevelInner = bvNone
@@ -215,7 +248,7 @@ object Form1: TForm1
       OnMouseDown = Image2MouseDown
       OnMouseMove = Image2MouseMove
       OnMouseUp = Image2MouseUp
-      ExplicitWidth = 296
+      ExplicitTop = 3
     end
   end
   object Button1: TButton
@@ -294,8 +327,8 @@ object Form1: TForm1
     OnClick = Button6Click
   end
   object Button9: TButton
-    Left = 591
-    Top = 302
+    Left = 592
+    Top = 298
     Width = 129
     Height = 22
     Anchors = [akTop, akRight]
@@ -561,7 +594,7 @@ object Form1: TForm1
         ImageIndex = 10
         OnClick = N3DSetup1Click
       end
-      object N3: TMenuItem
+      object N12: TMenuItem
         Caption = '-'
       end
       object About1: TMenuItem
@@ -573,6 +606,7 @@ object Form1: TForm1
         Caption = 'Check for updates...'
         SubMenuImages = ImageList1
         ImageIndex = 18
+        Visible = False
         OnClick = Checkforupdates1Click
       end
       object help1: TMenuItem
@@ -580,6 +614,60 @@ object Form1: TForm1
         ImageIndex = 9
         ShortCut = 112
         OnClick = help1Click
+      end
+    end
+    object Hotkeys1: TMenuItem
+      Caption = '[Hotkeys]'
+      Visible = False
+      object Newmonster1: TMenuItem
+        Caption = 'New monster'
+        ShortCut = 16462
+        OnClick = Newmonster1Click
+      end
+      object Newitem1: TMenuItem
+        Caption = 'New item'
+        ShortCut = 32846
+        OnClick = Newitem1Click
+      end
+      object Copymonster1: TMenuItem
+        Caption = 'Copy monster'
+        ShortCut = 16451
+        OnClick = Copymonster1Click
+      end
+      object Copyitem1: TMenuItem
+        Caption = 'Copy item'
+        ShortCut = 32835
+        OnClick = Copyitem1Click
+      end
+      object Delete1: TMenuItem
+        Caption = 'Delete'
+        ShortCut = 46
+        OnClick = Delete1Click
+      end
+      object Edit1: TMenuItem
+        Caption = 'Edit'
+        ShortCut = 32837
+        OnClick = Edit1Click
+      end
+      object Move1: TMenuItem
+        Caption = 'Move'
+        ShortCut = 16461
+        OnClick = Move1Click
+      end
+      object Undo1: TMenuItem
+        Caption = 'Undo'
+        ShortCut = 16474
+        OnClick = Undo1Click
+      end
+      object Options1: TMenuItem
+        Caption = 'Options'
+        ShortCut = 113
+        OnClick = Options1Click
+      end
+      object Cancelplacement1: TMenuItem
+        Caption = 'Cancel placement'
+        ShortCut = 27
+        OnClick = Cancelplacement1Click
       end
     end
   end
@@ -610,7 +698,7 @@ object Form1: TForm1
     Left = 300
     Top = 12
     Bitmap = {
-      494C010114001800080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010114001800040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1416,13 +1504,77 @@ object Form1: TForm1
     Top = 12
     object EnemyWave1: TMenuItem
       Caption = 'Enemy wave'
-      object TMenuItem
-      end
     end
     object Itemsgroupe1: TMenuItem
       Caption = 'Items group'
-      object TMenuItem
+    end
+    object N10: TMenuItem
+      Caption = '-'
+    end
+    object smNew: TMenuItem
+      Caption = 'New'
+      object smNewMonster: TMenuItem
+        Caption = 'Monster'
+        ShortCut = 16462
+        OnClick = smNewMonsterClick
       end
+      object smNewItem: TMenuItem
+        Caption = 'Item'
+        ShortCut = 32846
+        OnClick = smNewItemClick
+      end
+      object Copylastmonster1: TMenuItem
+        Caption = 'Copy last monster'
+        Enabled = False
+        ShortCut = 16451
+        OnClick = Copylastmonster1Click
+      end
+      object Copylastitem1: TMenuItem
+        Caption = 'Copy last item'
+        Enabled = False
+        ShortCut = 32835
+        OnClick = Copylastitem1Click
+      end
+    end
+    object smDelete: TMenuItem
+      Caption = 'Delete'
+      Enabled = False
+      ShortCut = 46
+      OnClick = smDeleteClick
+    end
+    object smEdit: TMenuItem
+      Caption = 'Edit'
+      Enabled = False
+      ShortCut = 32837
+      OnClick = smEditClick
+    end
+    object smMove: TMenuItem
+      Caption = 'Move'
+      Enabled = False
+      ShortCut = 16461
+      OnClick = smMoveClick
+    end
+    object smUndo: TMenuItem
+      Caption = 'Undo'
+      Enabled = False
+      ShortCut = 16474
+      OnClick = smUndoClick
+    end
+    object N11: TMenuItem
+      Caption = '-'
+    end
+    object smDrag: TMenuItem
+      Caption = 'Drag to move'
+      OnClick = smDragClick
+    end
+    object smSnap: TMenuItem
+      Caption = 'Snap alignment'
+      OnClick = smSnapClick
+    end
+    object smPlacement: TMenuItem
+      Caption = 'Options'
+      ShortCut = 113
+      OnClick = smPlacementClick
     end
   end
   object PopupMenu2: TPopupMenu
