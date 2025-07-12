@@ -253,6 +253,7 @@ begin
          form1.ListBox2.Items.Strings[selected]:='#'+inttostr(selected)+' - '+GetObjName(Floor[sfloor].Obj[selected].skin);
 
     end;
+    Form1.DrawMap;
     close;
 end;
 
