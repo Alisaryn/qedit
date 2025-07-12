@@ -347,6 +347,8 @@ begin
                       begin
                         floor[sfloor].Monster[selected].Pos_X := floor[sfloor].Monster[j].Pos_X;
                         mymonst[selected].PositionX := mymonst[j].PositionX;
+                        if (FPlacementOptions.chkSnapRotate.Checked) then
+                          floor[sfloor].Monster[selected].Direction := floor[sfloor].Monster[j].Direction;
                         GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
                       end;
                     end;
@@ -366,15 +368,12 @@ begin
                       begin
                         floor[sfloor].Monster[selected].Pos_Y := floor[sfloor].Monster[j].Pos_Y;
                         mymonst[selected].PositionY := mymonst[j].PositionY;
+                        if (FPlacementOptions.chkSnapRotate.Checked) then
+                          floor[sfloor].Monster[selected].Direction := floor[sfloor].Monster[j].Direction;
                         GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
                       end;
                     end;
                 end;
-              end;
-              if (FPlacementOptions.chkSnapRotate.Checked) then
-              begin
-                floor[sfloor].Monster[selected].Direction := floor[sfloor].Monster[j].Direction;
-                GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
               end;
             end;
 
@@ -409,6 +408,8 @@ begin
                       begin
                         floor[sfloor].Obj[selected].Pos_X := floor[sfloor].Obj[j].Pos_X;
                         myobj[selected].PositionX := myobj[j].PositionX;
+                        if (FPlacementOptions.chkSnapRotate.Checked) then
+                          floor[sfloor].Obj[selected].unknow6 := floor[sfloor].Obj[j].unknow6;
                         myobj[selected].Free;
                         Generateobj(floor[sfloor].obj[selected],selected);
                       end;
@@ -429,17 +430,13 @@ begin
                       begin
                         floor[sfloor].Obj[selected].Pos_Y := floor[sfloor].Obj[j].Pos_Y;
                         myobj[selected].PositionY := myobj[j].PositionY;
+                        if (FPlacementOptions.chkSnapRotate.Checked) then
+                          floor[sfloor].Obj[selected].unknow6 := floor[sfloor].Obj[j].unknow6;
                         myobj[selected].Free;
                         Generateobj(floor[sfloor].obj[selected],selected);
                       end;
                     end;
                 end;
-              end;
-              if (FPlacementOptions.chkSnapRotate.Checked) then
-              begin
-                floor[sfloor].Obj[selected].unknow6 := floor[sfloor].Obj[j].unknow6;
-                myobj[selected].Free;
-                Generateobj(floor[sfloor].obj[selected],selected);
               end;
             end;
 
