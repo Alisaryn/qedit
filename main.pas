@@ -5585,6 +5585,7 @@ var
 begin
   if MoveSel > -1 then
   begin
+    snapvalue := FPlacementOptions.seSnapTolerance.Value;
     lblStatus.Visible := false;
     lblModifiers.Visible := false;
     // find the nearest zone
@@ -5726,7 +5727,7 @@ begin
         end;
 
         // Match monster's rotations if enabled
-        if snaprotate then
+        if FPlacementOptions.chkSnapRotate.Checked then
           Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
       end;
 
@@ -5801,7 +5802,7 @@ begin
         end;
 
         // Match object's rotations if enabled
-        if snaprotate then
+        if FPlacementOptions.chkSnapRotate.Checked then
           Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
       end;
 
