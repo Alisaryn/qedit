@@ -2,7 +2,7 @@
     <PropertyGroup>
         <ProjectGuid>{DD31A0F2-5D1D-4495-BF7F-607A4724E098}</ProjectGuid>
         <MainSource>Qedit.dpr</MainSource>
-        <Config Condition="'$(Config)'==''">Débogage</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
         <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
