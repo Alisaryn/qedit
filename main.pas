@@ -412,7 +412,6 @@ type
     procedure smDragClick(Sender: TObject);
     procedure smSnapClick(Sender: TObject);
     procedure smPlacementClick(Sender: TObject);
-    procedure PlacementOptions1Click(Sender: TObject);
     procedure Hotkeys1Click(Sender: TObject);
     procedure smMoveClick(Sender: TObject);
     procedure Copylastmonster1Click(Sender: TObject);
@@ -532,9 +531,11 @@ var
   lastimgclick: dword = 0;
   lastloadformat: integer = 3;
   lsatsaveformat: integer = 4;
-  dragenabled: integer = 0;
-  snapenabled: integer = 0;
   snapvalue: integer = 10;
+  dragenabled: Boolean = false;
+  snapenabled: Boolean = false;
+  autoaxis: Boolean = false;
+  snaprotate: Boolean = false;
   OffsetX: single = 0.0;
   OffsetY: single = 0.0;
   OffsetZ: single = 0.0;
@@ -4061,11 +4062,15 @@ begin
         if Reg.ValueExists('SaveTo') then
           lsatsaveformat := Reg.ReadInteger('SaveTo');
         if Reg.ValueExists('DragEnabled') then
-          dragenabled := Reg.ReadInteger('DragEnabled');
+          dragenabled := Reg.ReadBool('DragEnabled');
         if Reg.ValueExists('SnapEnabled') then
-          snapenabled := Reg.ReadInteger('SnapEnabled');
+          snapenabled := Reg.ReadBool('SnapEnabled');
+        if Reg.ValueExists('AutoAxis') then
+          autoaxis := Reg.ReadBool('AutoAxis');
         if Reg.ValueExists('SnapValue') then
           snapvalue := Reg.ReadInteger('SnapValue');
+        if Reg.ValueExists('SnapRotate') then
+          snaprotate := Reg.ReadBool('SnapRotate');
         if Reg.ValueExists('OffsetX') then
           OffsetX := Reg.ReadFloat('OffsetX');
         if Reg.ValueExists('OffsetY') then
@@ -4201,12 +4206,11 @@ begin
     if mylang = 2 then
       PikaGetFile(flp, 'spa.txt', path + 'config.ppk', 'Build By Schthack');
 
-    if dragenabled = 1 then
-      smDrag.Checked := true
-    else smDrag.Checked := false;
-    if snapenabled = 1 then
-      smSnap.Checked := true
-    else smSnap.Checked := false;
+    smDrag.Checked := dragenabled;
+    smSnap.Checked := snapenabled;
+    Form7.chkAutoAxis.Checked := autoaxis;
+    FPlacementOptions.chkSnapRotate.Checked := snaprotate;
+
     FPlacementOptions.seSnapTolerance.Value := snapvalue;
     FPlacementOptions.nbOffsetX.Value := OffsetX;
     FPlacementOptions.nbOffsetY.Value := OffsetY;
@@ -5713,6 +5717,10 @@ begin
               end;
           end;
         end;
+
+        // Match monster's rotations if enabled
+        if FPlacementOptions.chkSnapRotate.Checked then
+          Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
       end;
 
       // look around to find the best pz
@@ -5784,6 +5792,10 @@ begin
               end;
           end;
         end;
+
+        // Match object's rotations if enabled
+        if FPlacementOptions.chkSnapRotate.Checked then
+          Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
       end;
 
       if not altdw or firstdrop then
@@ -7082,6 +7094,12 @@ end;
 procedure TForm1.smPlacementClick(Sender: TObject);
 begin
   FPlacementOptions.showmodal();
+  // Update based on snap preferences
+  snapvalue := FPlacementOptions.seSnapTolerance.Value;
+  if FPlacementOptions.chkSnapRotate.Checked then
+    snaprotate := true
+  else
+    snaprotate := false;
 end;
 
 procedure TForm1.smDeleteClick(Sender: TObject);
@@ -7093,36 +7111,17 @@ procedure TForm1.smDragClick(Sender: TObject);
 var
   Reg: TRegistry;
 begin
+  smDrag.Checked := not smDrag.Checked;
   Reg := TRegistry.Create;
-  if smDrag.Checked then
-  begin
-    smDrag.Checked := false;
-    try
+  try
     Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteInteger('DragEnabled', 0);
-      Reg.CloseKey;
-    end;
-    finally
-    Reg.Free;
-    inherited;
-  end;
-  end
-  else
+  if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
   begin
-    smDrag.Checked := true;
-    try
-    Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteInteger('DragEnabled', 1);
-      Reg.CloseKey;
-    end;
-    finally
-    Reg.Free;
-    inherited;
+    Reg.WriteBool('DragEnabled', smDrag.Checked);
+    Reg.CloseKey;
   end;
+  finally
+    Reg.Free;
   end;
 end;
 
@@ -7140,36 +7139,17 @@ procedure TForm1.smSnapClick(Sender: TObject);
 var
   Reg: TRegistry;
 begin
+  smSnap.Checked := not smSnap.Checked;
   Reg := TRegistry.Create;
-  if smSnap.Checked then
-  begin
-    smSnap.Checked := false;
-    try
+  try
     Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteInteger('SnapEnabled', 0);
-      Reg.CloseKey;
-    end;
-    finally
-    Reg.Free;
-    inherited;
-  end;
-  end
-  else
+  if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
   begin
-    smSnap.Checked := true;
-    try
-    Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteInteger('SnapEnabled', 1);
-      Reg.CloseKey;
-    end;
-    finally
-    Reg.Free;
-    inherited;
+    Reg.WriteBool('SnapEnabled', smSnap.Checked);
+    Reg.CloseKey;
   end;
+  finally
+    Reg.Free;
   end;
 end;
 
@@ -7445,7 +7425,7 @@ end;
 
 procedure TForm1.Options1Click(Sender: TObject);
 begin
-  FPlacementOptions.showmodal();
+  smPlacementClick(nil);
 end;
 
 {
@@ -7486,11 +7466,6 @@ begin
     Handled := true;
     Button6Click(self);
   end;
-end;
-
-procedure TForm1.PlacementOptions1Click(Sender: TObject);
-begin
-  FPlacementOptions.ShowModal;
 end;
 
 procedure TForm1.PopupMenu1Popup(Sender: TObject);

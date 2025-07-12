@@ -29,6 +29,7 @@ type
     nbDefaultY: TNumberBox;
     nbDefaultX: TNumberBox;
     btnReset: TButton;
+    chkSnapRotate: TCheckBox;
     procedure btnSaveClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -63,11 +64,11 @@ begin
       Reg.WriteFloat('DefaultY', nbDefaultY.Value);
       Reg.WriteFloat('DefaultZ', nbDefaultZ.Value);
       Reg.WriteInteger('SnapValue', seSnapTolerance.Value);
+      Reg.WriteBool('SnapRotate', chkSnapRotate.Checked);
       Reg.CloseKey;
     end;
-    finally
+  finally
     Reg.Free;
-    inherited;
   end;
     close;
 end;
@@ -106,6 +107,7 @@ begin
   nbDefaultY.Value := 0.0;
   nbDefaultZ.Value := 0.0;
   seSnapTolerance.Value := 10;
+  chkSnapRotate.Checked := false;
 end;
 
 end.

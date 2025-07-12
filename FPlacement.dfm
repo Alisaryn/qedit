@@ -3,7 +3,7 @@ object FPlacementOptions: TFPlacementOptions
   Top = 0
   BorderStyle = bsToolWindow
   Caption = 'Placement Options'
-  ClientHeight = 416
+  ClientHeight = 443
   ClientWidth = 249
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -84,16 +84,16 @@ object FPlacementOptions: TFPlacementOptions
     Width = 233
     Height = 159
     Caption = 'Default placement'
-    TabOrder = 11
+    TabOrder = 12
   end
   object btnSave: TButton
     Left = 87
-    Top = 349
+    Top = 374
     Width = 75
     Height = 25
     Caption = 'Save'
     Default = True
-    TabOrder = 9
+    TabOrder = 10
     OnClick = btnSaveClick
   end
   object seDefaultSect: TSpinEdit
@@ -172,11 +172,19 @@ object FPlacementOptions: TFPlacementOptions
   end
   object btnReset: TButton
     Left = 87
-    Top = 380
+    Top = 405
     Width = 75
     Height = 25
     Caption = 'Defaults'
-    TabOrder = 10
+    TabOrder = 11
     OnClick = btnResetClick
+  end
+  object chkSnapRotate: TCheckBox
+    Left = 23
+    Top = 343
+    Width = 98
+    Height = 17
+    Caption = 'Snap rotation'
+    TabOrder = 9
   end
 end
