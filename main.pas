@@ -531,9 +531,10 @@ var
   lastimgclick: dword = 0;
   lastloadformat: integer = 3;
   lsatsaveformat: integer = 4;
-  dragenabled: integer = 0;
-  snapenabled: integer = 0;
   snapvalue: integer = 10;
+  dragenabled: Boolean = false;
+  snapenabled: Boolean = false;
+  autoaxis: Boolean = false;
   snaprotate: Boolean = false;
   OffsetX: single = 0.0;
   OffsetY: single = 0.0;
@@ -4061,9 +4062,11 @@ begin
         if Reg.ValueExists('SaveTo') then
           lsatsaveformat := Reg.ReadInteger('SaveTo');
         if Reg.ValueExists('DragEnabled') then
-          dragenabled := Reg.ReadInteger('DragEnabled');
+          dragenabled := Reg.ReadBool('DragEnabled');
         if Reg.ValueExists('SnapEnabled') then
-          snapenabled := Reg.ReadInteger('SnapEnabled');
+          snapenabled := Reg.ReadBool('SnapEnabled');
+        if Reg.ValueExists('AutoAxis') then
+          autoaxis := Reg.ReadBool('AutoAxis');
         if Reg.ValueExists('SnapValue') then
           snapvalue := Reg.ReadInteger('SnapValue');
         if Reg.ValueExists('SnapRotate') then
@@ -4203,12 +4206,15 @@ begin
     if mylang = 2 then
       PikaGetFile(flp, 'spa.txt', path + 'config.ppk', 'Build By Schthack');
 
-    if dragenabled = 1 then
+    if dragenabled then
       smDrag.Checked := true
     else smDrag.Checked := false;
-    if snapenabled = 1 then
+    if snapenabled then
       smSnap.Checked := true
     else smSnap.Checked := false;
+    if autoaxis then
+      Form7.chkAutoAxis.Checked := true
+    else Form7.chkAutoAxis.Checked := false;
     if snaprotate then
       FPlacementOptions.chkSnapRotate.Checked := true
     else FPlacementOptions.chkSnapRotate.Checked := false;
@@ -7120,7 +7126,7 @@ begin
     Reg.RootKey := HKEY_CURRENT_USER;
     if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
     begin
-      Reg.WriteInteger('DragEnabled', 0);
+      Reg.WriteBool('DragEnabled', false);
       Reg.CloseKey;
     end;
     finally
@@ -7135,7 +7141,7 @@ begin
     Reg.RootKey := HKEY_CURRENT_USER;
     if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
     begin
-      Reg.WriteInteger('DragEnabled', 1);
+      Reg.WriteBool('DragEnabled', true);
       Reg.CloseKey;
     end;
     finally
@@ -7167,7 +7173,7 @@ begin
     Reg.RootKey := HKEY_CURRENT_USER;
     if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
     begin
-      Reg.WriteInteger('SnapEnabled', 0);
+      Reg.WriteBool('SnapEnabled', false);
       Reg.CloseKey;
     end;
     finally
@@ -7182,7 +7188,7 @@ begin
     Reg.RootKey := HKEY_CURRENT_USER;
     if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
     begin
-      Reg.WriteInteger('SnapEnabled', 1);
+      Reg.WriteBool('SnapEnabled', true);
       Reg.CloseKey;
     end;
     finally

@@ -11,11 +11,9 @@ object Form7: TForm7
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poOwnerFormCenter
   OnClose = FormClose
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Image1: TImage
     Left = 350
@@ -100,5 +98,14 @@ object Form7: TForm7
     ColWidths = (
       132
       175)
+  end
+  object chkAutoAxis: TCheckBox
+    Left = 371
+    Top = 329
+    Width = 75
+    Height = 17
+    Caption = 'Auto-axis'
+    TabOrder = 3
+    OnMouseUp = chkAutoAxisMouseUp
   end
 end

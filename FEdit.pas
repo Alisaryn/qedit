@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Grids, ValEdit, StdCtrls, ComCtrls, ExtCtrls, main;
+  Dialogs, Grids, ValEdit, StdCtrls, ComCtrls, ExtCtrls, registry, main;
 
 type
   TForm7 = class(TForm)
@@ -16,6 +16,7 @@ type
     Label3: TLabel;
     StringGrid1: TStringGrid;
     Image2: TImage;
+    chkAutoAxis: TCheckBox;
     procedure Button1Click(Sender: TObject);
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
@@ -31,6 +32,9 @@ type
     procedure StringGrid1Enter(Sender: TObject);
     procedure StringGrid1Exit(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure chkAutoAxisMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+
   private
     { Private declarations }
   public
@@ -407,9 +411,13 @@ end;
 
 procedure TForm7.Image2MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
-var sx,sy,rt,xx,yy:integer;
+var i,diff,diffmin,closest,sx,sy,rt,xx,yy:integer;
     t:tstringlist;
+    rtvalues: Array of integer;
 begin
+    // Static values for precise rotation
+    rtvalues := [0, 4096, 8192, 12288, 16384, 20480, 24576, 28672,
+                32768, 36864, 40960, 45056, 49152, 53248, 57344, 65535];
     sx:=x-52;
     sy:=y-48;
     if (sx<>0) and (sy<>0) then begin
@@ -445,6 +453,25 @@ begin
     end;
     end;
 
+
+    if chkAutoAxis.Checked then
+    begin
+      // Find the closest rotation value to the user's selection
+      closest := rtvalues[0];
+      diffmin := abs(rtvalues[0] - rt);
+      for i := 0 to High(rtvalues) do
+      begin
+        diff := abs(rt - rtvalues[i]);
+        if diff < diffmin then
+        begin
+          diffmin := diff;
+          closest := i;
+        end;
+      end;
+      // Set the new value
+      rt := rtvalues[closest];
+    end;
+
     if stype = 1 then begin
         EMonsterData.Direction:=(rt-rev[EMonsterData.Map_Section]) and $ffff;
         yy:=0;
@@ -473,6 +500,44 @@ begin
     DrawRotation(-rt);//-()*10430.37835));
 
     //52,48
+end;
+
+procedure TForm7.chkAutoAxisMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  var
+  Reg: TRegistry;
+begin
+  Reg := TRegistry.Create;
+  if chkAutoAxis.Checked then
+  begin
+    try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
+    begin
+      Reg.WriteBool('AutoAxis', true);
+      Reg.CloseKey;
+    end;
+    finally
+    Reg.Free;
+    inherited;
+  end;
+  end
+  else
+  begin
+    try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
+    begin
+      Reg.WriteBool('AutoAxis', false);
+      Reg.CloseKey;
+    end;
+    finally
+    Reg.Free;
+    inherited;
+  end;
+  end;
+end;
 end;
 
 procedure TForm7.FormClose(Sender: TObject; var Action: TCloseAction);

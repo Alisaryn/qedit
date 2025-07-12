@@ -219,7 +219,7 @@ begin
 
         if ini > 0 then begin
             dec(ini);
-            myscreen.TextOut('Q = forward, A = backward, D = Togle data format, F = Togle fog effect',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
+            myscreen.TextOut('Q = forward, A = backward, D = Togle data format, F = Togle fog effect, S = Snap',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
             myscreen.TextOut('Edit: Hold click + CTRL = move, + SHIFT = up/down, + right click = rotate',rect(0,form13.Height-50,640,form13.Height-35),$FFFFFFFF,1);
         end;
         myscreen.RenderSurface;
@@ -331,7 +331,49 @@ begin
             floor[sfloor].Monster[selected].Pos_X:=px3;
             floor[sfloor].Monster[selected].Pos_Y:=py3;
 
-            // TODO: Implement proper snap for 3D View
+            if (snapenabled) or (Keys[83] = true) then
+            begin
+              // 3D vertical snap for monsters
+              for j := 0 to Floor[sfloor].MonsterCount - 1 do
+              begin
+                for i := 0 to snapvalue do
+                begin
+                    if (Floor[sfloor].Monster[j].map_section = Floor[sfloor].Monster[selected].map_section) and
+                    ((Floor[sfloor].Monster[j].Unknow5 = showwave) or (showwave = -1)) then
+                    begin
+                      if ((round(Floor[sfloor].Monster[j].Pos_X + i)) = round(px3))
+                      or ((round(Floor[sfloor].Monster[j].Pos_X - i)) = round(px3)) then
+                      begin
+                        floor[sfloor].Monster[selected].Pos_X := floor[sfloor].Monster[j].Pos_X;
+                        mymonst[selected].PositionX := mymonst[j].PositionX;
+                      end;
+                    end;
+                end;
+              end;
+
+              // 3D horizontal snap for monsters
+              for j := 0 to Floor[sfloor].MonsterCount - 1 do
+              begin
+                for i := 0 to snapvalue do
+                begin
+                    if (Floor[sfloor].Monster[j].map_section = Floor[sfloor].Monster[selected].map_section) and
+                    ((Floor[sfloor].Monster[j].Unknow5 = showwave) or (showwave = -1)) then
+                    begin
+                      if ((round(Floor[sfloor].Monster[j].Pos_Y + i)) = round(py3))
+                      or ((round(Floor[sfloor].Monster[j].Pos_Y - i)) = round(py3)) then
+                      begin
+                        floor[sfloor].Monster[selected].Pos_Y := floor[sfloor].Monster[j].Pos_Y;
+                        mymonst[selected].PositionY := mymonst[j].PositionY;
+                      end;
+                    end;
+                end;
+              end;
+              if (snaprotate) then
+              begin
+                floor[sfloor].Monster[selected].Direction := floor[sfloor].Monster[j].Direction;
+                GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
+              end;
+            end;
 
             sel3d.SetCoordinate(mymonst[selected].PositionX ,
                 floor[sfloor].Monster[selected].Pos_z+miz[Floor[sfloor].Monster[selected].map_section]+0.5,
@@ -349,7 +391,50 @@ begin
             floor[sfloor].Obj[selected].Pos_X:=px3;
             floor[sfloor].Obj[selected].Pos_Y:=py3;
 
-            // TODO: Implement proper snap for 3D View
+            if (snapenabled) or (Keys[83] = true) then
+            begin
+              // 3D vertical snap for objects
+              for j := 0 to Floor[sfloor].ObjCount - 1 do
+              begin
+                for i := 0 to snapvalue do
+                begin
+                    if (Floor[sfloor].Obj[j].map_section = Floor[sfloor].Obj[selected].map_section) and
+                    ((Floor[sfloor].Obj[j].Unknow5 = showwave) or (showwave = -1)) then
+                    begin
+                      if ((round(Floor[sfloor].Obj[j].Pos_X + i)) = round(px3))
+                      or ((round(Floor[sfloor].Obj[j].Pos_X - i)) = round(px3)) then
+                      begin
+                        floor[sfloor].Obj[selected].Pos_X := floor[sfloor].Obj[j].Pos_X;
+                        myobj[selected].PositionX := myobj[j].PositionX;
+                      end;
+                    end;
+                end;
+              end;
+
+              // 3D horizontal snap for objects
+              for j := 0 to Floor[sfloor].ObjCount - 1 do
+              begin
+                for i := 0 to snapvalue do
+                begin
+                    if (Floor[sfloor].Obj[j].map_section = Floor[sfloor].Obj[selected].map_section) and
+                    ((Floor[sfloor].Obj[j].Unknow5 = showwave) or (showwave = -1)) then
+                    begin
+                      if ((round(Floor[sfloor].Obj[j].Pos_Y + i)) = round(py3))
+                      or ((round(Floor[sfloor].Obj[j].Pos_Y - i)) = round(py3)) then
+                      begin
+                        floor[sfloor].Obj[selected].Pos_Y := floor[sfloor].Obj[j].Pos_Y;
+                        myobj[selected].PositionY := myobj[j].PositionY;
+                      end;
+                    end;
+                end;
+              end;
+              if (snaprotate) then
+              begin
+                floor[sfloor].Obj[selected].unknow6 := floor[sfloor].Obj[j].unknow6;
+                myobj[selected].Free;
+                Generateobj(floor[sfloor].obj[selected],selected);
+              end;
+            end;
 
             sel3d.SetCoordinate(MyObj[selected].PositionX ,
                 floor[sfloor].obj[selected].Pos_Z+miz[Floor[sfloor].obj[selected].Map_Section]+0.5,
