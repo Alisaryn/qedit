@@ -219,7 +219,7 @@ begin
 
         if ini > 0 then begin
             dec(ini);
-            myscreen.TextOut('Q = forward, A = backward, D = Togle data format, F = Togle fog effect, S = Snap',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
+            myscreen.TextOut('Q = forward, A = backward, D = Togle data format, F = Togle fog effect, S = Snap align',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
             myscreen.TextOut('Edit: Hold click + CTRL = move, + SHIFT = up/down, + right click = rotate',rect(0,form13.Height-50,640,form13.Height-35),$FFFFFFFF,1);
         end;
         myscreen.RenderSurface;
