@@ -4206,18 +4206,10 @@ begin
     if mylang = 2 then
       PikaGetFile(flp, 'spa.txt', path + 'config.ppk', 'Build By Schthack');
 
-    if dragenabled then
-      smDrag.Checked := true
-    else smDrag.Checked := false;
-    if snapenabled then
-      smSnap.Checked := true
-    else smSnap.Checked := false;
-    if autoaxis then
-      Form7.chkAutoAxis.Checked := true
-    else Form7.chkAutoAxis.Checked := false;
-    if snaprotate then
-      FPlacementOptions.chkSnapRotate.Checked := true
-    else FPlacementOptions.chkSnapRotate.Checked := false;
+    smDrag.Checked := dragenabled;
+    smSnap.Checked := snapenabled;
+    Form7.chkAutoAxis.Checked := autoaxis;
+    FPlacementOptions.chkSnapRotate.Checked := snaprotate;
 
     FPlacementOptions.seSnapTolerance.Value := snapvalue;
     FPlacementOptions.nbOffsetX.Value := OffsetX;
@@ -7119,36 +7111,17 @@ procedure TForm1.smDragClick(Sender: TObject);
 var
   Reg: TRegistry;
 begin
+  smDrag.Checked := not smDrag.Checked;
   Reg := TRegistry.Create;
-  if smDrag.Checked then
-  begin
-    smDrag.Checked := false;
-    try
+  try
     Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteBool('DragEnabled', false);
-      Reg.CloseKey;
-    end;
-    finally
-    Reg.Free;
-    inherited;
-  end;
-  end
-  else
+  if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
   begin
-    smDrag.Checked := true;
-    try
-    Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteBool('DragEnabled', true);
-      Reg.CloseKey;
-    end;
-    finally
-    Reg.Free;
-    inherited;
+    Reg.WriteBool('DragEnabled', smDrag.Checked);
+    Reg.CloseKey;
   end;
+  finally
+    Reg.Free;
   end;
 end;
 
@@ -7166,36 +7139,17 @@ procedure TForm1.smSnapClick(Sender: TObject);
 var
   Reg: TRegistry;
 begin
+  smSnap.Checked := not smSnap.Checked;
   Reg := TRegistry.Create;
-  if smSnap.Checked then
-  begin
-    smSnap.Checked := false;
-    try
+  try
     Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteBool('SnapEnabled', false);
-      Reg.CloseKey;
-    end;
-    finally
-    Reg.Free;
-    inherited;
-  end;
-  end
-  else
+  if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
   begin
-    smSnap.Checked := true;
-    try
-    Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteBool('SnapEnabled', true);
-      Reg.CloseKey;
-    end;
-    finally
-    Reg.Free;
-    inherited;
+    Reg.WriteBool('SnapEnabled', smSnap.Checked);
+    Reg.CloseKey;
   end;
+  finally
+    Reg.Free;
   end;
 end;
 

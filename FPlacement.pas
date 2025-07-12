@@ -64,15 +64,11 @@ begin
       Reg.WriteFloat('DefaultY', nbDefaultY.Value);
       Reg.WriteFloat('DefaultZ', nbDefaultZ.Value);
       Reg.WriteInteger('SnapValue', seSnapTolerance.Value);
-      if chkSnapRotate.Checked then
-        Reg.WriteBool('SnapRotate', true)
-      else
-        Reg.WriteBool('SnapRotate', false);
+      Reg.WriteBool('SnapRotate', chkSnapRotate.Checked);
       Reg.CloseKey;
     end;
-    finally
+  finally
     Reg.Free;
-    inherited;
   end;
     close;
 end;

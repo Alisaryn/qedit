@@ -503,42 +503,21 @@ begin
     //52,48
 end;
 
-procedure TForm7.chkAutoAxisMouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
+procedure TForm7.chkAutoAxisMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   var
   Reg: TRegistry;
 begin
   Reg := TRegistry.Create;
-  if chkAutoAxis.Checked then
-  begin
-    try
+  try
     Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteBool('AutoAxis', true);
-      Reg.CloseKey;
-    end;
-    finally
-    Reg.Free;
-    inherited;
-  end;
-  end
-  else
+  if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
   begin
-    try
-    Reg.RootKey := HKEY_CURRENT_USER;
-    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
-    begin
-      Reg.WriteBool('AutoAxis', false);
-      Reg.CloseKey;
-    end;
-    finally
+    Reg.WriteBool('AutoAxis', chkAutoAxis.Checked);
+    Reg.CloseKey;
+  end;
+  finally
     Reg.Free;
-    inherited;
   end;
-  end;
-end;
 end;
 
 procedure TForm7.FormClose(Sender: TObject; var Action: TCloseAction);
