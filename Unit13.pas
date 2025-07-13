@@ -665,7 +665,7 @@ procedure TForm13.FormKeyPress(Sender: TObject; var Key: Char);
 begin
     if key = 'd' then dta:=dta xor 1;
     if key = 'f' then fog:=fog xor 1;
-    // Auto-rotate monster/object 90 degrees
+    // Auto-rotate monster/object 45 degrees
     if key = 'r' then
     begin
       if sType = 1 then
@@ -680,8 +680,8 @@ begin
         Generateobj(floor[sfloor].obj[selected],selected);
       end;
       // Increment for next rotation
-      if rtinc <= 49152 then
-        rtinc := rtinc + 16384
+      if rtinc <= 57344 then
+        rtinc := rtinc + 8192
       else rtinc := 0;
     end;
 end;

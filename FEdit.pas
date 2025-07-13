@@ -418,7 +418,7 @@ var i,diff,diffmin,closest,sx,sy,rt,xx,yy:integer;
 begin
     // Static values for precise rotation
     rtvalues := [0, 4096, 8192, 12288, 16384, 20480, 24576, 28672,
-                32768, 36864, 40960, 45056, 49152, 53248, 57344, 65535];
+                32768, 36864, 40960, 45056, 49152, 53248, 57344, 65536];
     sx:=x-52;
     sy:=y-48;
     if (sx<>0) and (sy<>0) then begin
