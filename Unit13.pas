@@ -37,6 +37,7 @@ var
   ini:integer=1024;
   dta:integer=0;
   fog:integer=1;
+  rtinc:integer=0;
   rtx,rty,rtz:boolean;
   
   fogCol:dword;
@@ -219,8 +220,8 @@ begin
 
         if ini > 0 then begin
             dec(ini);
-            myscreen.TextOut('Q = forward, A = backward, D = Togle data format, F = Togle fog effect, S = Snap align',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
-            myscreen.TextOut('Edit: Hold click + CTRL = move, + SHIFT = up/down, + right click = rotate',rect(0,form13.Height-50,640,form13.Height-35),$FFFFFFFF,1);
+            myscreen.TextOut('Q = forward, A = backward, D = Togle data format, F = Togle fog effect, R = Auto-rotate',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
+            myscreen.TextOut('Edit: Hold click + CTRL = move, + SHIFT = up/down, + right click = rotate, CTRL + S = Snap',rect(0,form13.Height-50,640,form13.Height-35),$FFFFFFFF,1);
         end;
         myscreen.RenderSurface;
         if Keys[Ord('Q')] then GoForward;
@@ -332,7 +333,7 @@ begin
             floor[sfloor].Monster[selected].Pos_X:=px3;
             floor[sfloor].Monster[selected].Pos_Y:=py3;
 
-            if (Form1.smSnap.Checked) or (Keys[83] = true) then
+            if (Form1.smSnap.Checked) or (Keys[Ord('S')]) then
             begin
               // 3D vertical snap for monsters
               for j := 0 to Floor[sfloor].MonsterCount - 1 do
@@ -393,7 +394,7 @@ begin
             floor[sfloor].Obj[selected].Pos_X:=px3;
             floor[sfloor].Obj[selected].Pos_Y:=py3;
 
-            if (Form1.smSnap.Checked) or (Keys[83] = true) then
+            if (Form1.smSnap.Checked) or (Keys[Ord('S')]) then
             begin
               // 3D vertical snap for objects
               for j := 0 to Floor[sfloor].ObjCount - 1 do
@@ -664,6 +665,25 @@ procedure TForm13.FormKeyPress(Sender: TObject; var Key: Char);
 begin
     if key = 'd' then dta:=dta xor 1;
     if key = 'f' then fog:=fog xor 1;
+    // Auto-rotate monster/object 90 degrees
+    if key = 'r' then
+    begin
+      if sType = 1 then
+      begin
+        floor[sfloor].Monster[selected].Direction := rtinc;
+        GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
+      end;
+      if sType = 2 then
+      begin
+        floor[sfloor].Obj[selected].unknow6 := rtinc;
+        myobj[selected].Free;
+        Generateobj(floor[sfloor].obj[selected],selected);
+      end;
+      // Increment for next rotation
+      if rtinc <= 49152 then
+        rtinc := rtinc + 16384
+      else rtinc := 0;
+    end;
 end;
 
 procedure TForm13.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
