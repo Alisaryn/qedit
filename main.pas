@@ -5695,6 +5695,9 @@ begin
                 or ((round(Floor[sfloor].Monster[j].Pos_X - i)) = round(px)) then
                 begin
                   Floor[sfloor].Monster[MoveSel].Pos_X := Floor[sfloor].Monster[j].Pos_X;
+                  // Match monster's rotations if enabled
+                  if FPlacementOptions.chkSnapRotate.Checked then
+                    Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
                 end;
               end;
           end;
@@ -5713,14 +5716,12 @@ begin
                 or ((round(Floor[sfloor].Monster[j].Pos_Y - i)) = round(py)) then
                 begin
                   Floor[sfloor].Monster[MoveSel].Pos_Y := Floor[sfloor].Monster[j].Pos_Y;
+                  if FPlacementOptions.chkSnapRotate.Checked then
+                    Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
                 end;
               end;
           end;
         end;
-
-        // Match monster's rotations if enabled
-        if FPlacementOptions.chkSnapRotate.Checked then
-          Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
       end;
 
       // look around to find the best pz
@@ -5770,6 +5771,9 @@ begin
                 or ((round(Floor[sfloor].Obj[j].Pos_X - i)) = round(px)) then
                 begin
                   Floor[sfloor].Obj[MoveSel].Pos_X := Floor[sfloor].Obj[j].Pos_X;
+                  // Match object's rotations if enabled
+                  if FPlacementOptions.chkSnapRotate.Checked then
+                    Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
                 end;
               end;
           end;
@@ -5788,14 +5792,12 @@ begin
                 or ((round(Floor[sfloor].Obj[j].Pos_Y - i)) = round(py)) then
                 begin
                   Floor[sfloor].Obj[MoveSel].Pos_Y := Floor[sfloor].Obj[j].Pos_Y;
+                  if FPlacementOptions.chkSnapRotate.Checked then
+                    Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
                 end;
               end;
           end;
         end;
-
-        // Match object's rotations if enabled
-        if FPlacementOptions.chkSnapRotate.Checked then
-          Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
       end;
 
       if not altdw or firstdrop then
