@@ -3419,7 +3419,7 @@ procedure TForm1.Copylastitem1Click(Sender: TObject);
 var
   x: integer;
 begin
-  if (form10.ComboBox1.ItemIndex > -1) and (form10.tag = 1) then
+  if ((form10.ComboBox1.ItemIndex > -1) and (form10.tag = 1)) or Copylastitem1.Enabled then
   begin
     inc(Floor[sfloor].ObjCount);
     for x := 0 to preseti - 1 do
@@ -3461,7 +3461,7 @@ procedure TForm1.Copylastmonster1Click(Sender: TObject);
 var
   x: integer;
 begin
-  if (form9.ComboBox1.ItemIndex > -1) and (form9.tag = 1) then
+  if ((form9.ComboBox1.ItemIndex > -1) and (form9.tag = 1)) or Copylastmonster1.Enabled then
   begin
     inc(Floor[sfloor].MonsterCount);
     for x := 0 to presetm - 1 do
