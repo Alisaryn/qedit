@@ -82,7 +82,7 @@ object FPlacementOptions: TFPlacementOptions
     Left = 8
     Top = 146
     Width = 233
-    Height = 159
+    Height = 153
     Caption = 'Default placement'
     TabOrder = 12
   end
