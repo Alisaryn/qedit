@@ -65,7 +65,7 @@ object FPlacementOptions: TFPlacementOptions
   end
   object Label8: TLabel
     Left = 24
-    Top = 322
+    Top = 314
     Width = 118
     Height = 15
     Caption = 'Snap tolerance (units):'
@@ -88,7 +88,7 @@ object FPlacementOptions: TFPlacementOptions
   end
   object btnSave: TButton
     Left = 87
-    Top = 374
+    Top = 366
     Width = 75
     Height = 25
     Caption = 'Save'
@@ -108,7 +108,7 @@ object FPlacementOptions: TFPlacementOptions
   end
   object seSnapTolerance: TSpinEdit
     Left = 168
-    Top = 319
+    Top = 311
     Width = 57
     Height = 24
     MaxValue = 0
@@ -172,7 +172,7 @@ object FPlacementOptions: TFPlacementOptions
   end
   object btnReset: TButton
     Left = 87
-    Top = 405
+    Top = 397
     Width = 75
     Height = 25
     Caption = 'Defaults'
@@ -181,7 +181,7 @@ object FPlacementOptions: TFPlacementOptions
   end
   object chkSnapRotate: TCheckBox
     Left = 23
-    Top = 343
+    Top = 335
     Width = 98
     Height = 17
     Caption = 'Snap rotation'
