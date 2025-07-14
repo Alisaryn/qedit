@@ -666,7 +666,7 @@ begin
     if key = 'd' then dta:=dta xor 1;
     if key = 'f' then fog:=fog xor 1;
     // Auto-rotate monster/object 45 degrees
-    if key = 'r' then
+    if (key = 'r') and (selected > -1) then
     begin
       if sType = 1 then
       begin

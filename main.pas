@@ -3529,7 +3529,7 @@ var
   z, l: Integer;
   px, px2, py, py2: Double;
 begin
-  // End of mouse drag
+  // Start of mouse drag
   if (Button = mbleft) and (smDrag.checked) then
   begin
     imgclickstart := gettickcount();
@@ -3652,7 +3652,7 @@ end;
 
 procedure TForm1.Image2MouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; x, y: integer);
 begin
-  // Start of mouse drag
+  // End of mouse drag
   if (Button = mbleft) and (smDrag.Checked) and (mdrag = 1) and (gettickcount() - imgclickstart >= 300) then
   begin
     MoveSel := -1;
