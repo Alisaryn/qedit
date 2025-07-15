@@ -1615,7 +1615,6 @@ object Form1: TForm1
   end
   object PopupMenu3: TPopupMenu
     MenuAnimation = [maLeftToRight]
-    OnPopup = PopupMenu2Popup
     Left = 396
     Top = 10
     object smDisableIndicator: TMenuItem
