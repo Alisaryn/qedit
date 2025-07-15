@@ -325,6 +325,8 @@ type
     Undo1: TMenuItem;
     Options1: TMenuItem;
     Cancelplacement1: TMenuItem;
+    PopupMenu3: TPopupMenu;
+    smDisableIndicator: TMenuItem;
     procedure Quit1Click(Sender: TObject);
     procedure Load1Click(Sender: TObject);
     procedure CheckListBox1Click(Sender: TObject);
@@ -429,6 +431,9 @@ type
     procedure Cancelplacement1Click(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure smDisableIndicatorClick(Sender: TObject);
 
   private
     procedure MenueDrawItemX(xMenu: TMenu);
@@ -452,6 +457,8 @@ procedure ClearShadow;
 Function GetLanguageString(id: integer): ansistring;
 procedure SetMonsterDefaults();
 procedure SetObjectDefaults();
+procedure ShowIndicator();
+procedure HideIndicator();
 
 var
   Form1: TForm1;
@@ -536,6 +543,7 @@ var
   snapenabled: Boolean = false;
   autoaxis: Boolean = false;
   snaprotate: Boolean = false;
+  disableindicator: Boolean = false;
   OffsetX: single = 0.0;
   OffsetY: single = 0.0;
   OffsetZ: single = 0.0;
@@ -2057,8 +2065,7 @@ begin
     curepi := 0;
     fillchar(BBData[0], sizeof(BBData), 0);
     MoveSel := -1;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     path := extractfilepath(application.ExeName);
     fn := OpenDialog1.filename;
     FullQuestFile := fn;
@@ -2656,14 +2663,31 @@ begin
   Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
 end;
 
+procedure ShowIndicator();
+begin
+  if not Form1.smDisableIndicator.Checked then
+  begin
+    Form1.lblStatus.Visible := true;
+    Form1.lblModifiers.Visible := true;
+  end;
+end;
+
+procedure HideIndicator();
+begin
+  if not Form1.smDisableIndicator.Checked then
+  begin
+    Form1.lblStatus.Visible := false;
+    Form1.lblModifiers.Visible := false;
+  end;
+end;
+
 procedure TForm1.CheckListBox1Click(Sender: TObject);
 var
   x: integer;
 begin
   if CheckListBox1.ItemIndex >= 0 then
   begin
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     Copylastmonster1.Enabled := false;
     Copylastitem1.Enabled := false;
     ListBox1.Clear;
@@ -2748,8 +2772,7 @@ begin
     Selected := ListBox1.ItemIndex;
     ListBox2.ItemIndex := -1;
     MoveSel := -1;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     stype := 1;
     Button2.Enabled := true;
     Button1.Enabled := true;
@@ -2822,8 +2845,7 @@ begin
   if ListBox2.ItemIndex >= 0 then
   begin
     Selected := ListBox2.ItemIndex;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     MoveSel := -1;
     Button2.Enabled := true;
     Button1.Enabled := true;
@@ -2913,6 +2935,24 @@ procedure TForm1.Description1Click(Sender: TObject);
 begin
   form3.UnicodeMemo1.Text := Info;
   form3.ShowModal;
+end;
+
+procedure TForm1.smDisableIndicatorClick(Sender: TObject);
+var
+  Reg: TRegistry;
+begin
+  smDisableIndicator.Checked := not smDisableIndicator.Checked;
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+  if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
+  begin
+    Reg.WriteBool('DisableIndicator', smDisableIndicator.Checked);
+    Reg.CloseKey;
+  end;
+  finally
+    Reg.Free;
+  end;
 end;
 
 procedure TForm1.DrawPCRELFile(filename: ansistring);
@@ -3437,8 +3477,7 @@ begin
     end;
 
     SetObjectDefaults();
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Floor[sfloor].ObjCount - 1;
     MoveType := 2;
     ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].Skin));
@@ -3473,8 +3512,7 @@ begin
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
 
     SetMonsterDefaults();
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Floor[sfloor].MonsterCount - 1;
     MoveType := 1;
     firstdrop := true;
@@ -3656,12 +3694,10 @@ begin
   if (Button = mbleft) and (smDrag.Checked) and (mdrag = 1) and (gettickcount() - imgclickstart >= 300) then
   begin
     MoveSel := -1;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     if Selected > -1 then
     begin
-      lblStatus.Visible := true;
-      lblModifiers.Visible := true;
+      ShowIndicator();
       MoveSel := Selected;
       MoveType := stype;
       isedited := true;
@@ -4085,6 +4121,8 @@ begin
           DefaultY := Reg.ReadFloat('DefaultY');
         if Reg.ValueExists('DefaultZ') then
           DefaultZ := Reg.ReadFloat('DefaultZ');
+        if Reg.ValueExists('DisableIndicator') then
+          disableindicator := Reg.ReadBool('DisableIndicator');
         Reg.CloseKey;
       end;
       Reg.Free;
@@ -4210,7 +4248,7 @@ begin
     smSnap.Checked := snapenabled;
     Form7.chkAutoAxis.Checked := autoaxis;
     FPlacementOptions.chkSnapRotate.Checked := snaprotate;
-
+    smDisableIndicator.Checked := disableindicator;
     FPlacementOptions.seSnapTolerance.Value := snapvalue;
     FPlacementOptions.nbOffsetX.Value := OffsetX;
     FPlacementOptions.nbOffsetY.Value := OffsetY;
@@ -5210,8 +5248,7 @@ begin
   begin
     s := Selected;
     isedited := true;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     MoveSel := -1;
     SetUndow;
     if stype = 1 then
@@ -5353,8 +5390,7 @@ begin
     end;
 
     SetObjectDefaults();
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Floor[sfloor].ObjCount - 1;
     MoveType := 2;
     ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].Skin));
@@ -5438,8 +5474,7 @@ begin
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
 
     SetMonsterDefaults();
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Floor[sfloor].MonsterCount - 1;
     MoveType := 1;
     firstdrop := true;
@@ -5578,8 +5613,7 @@ begin
   if MoveSel > -1 then
   begin
     snapvalue := FPlacementOptions.seSnapTolerance.Value;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     // find the nearest zone
     // extract the real px, py
     SetUndow;
@@ -5599,8 +5633,7 @@ begin
         for x := 0 to sizeof(TMonster) - 1 do
           pansichar(@Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1])[x] :=
             pansichar(@Floor[sfloor].Monster[MoveSel])[x];
-        lblStatus.Visible := true;
-        lblModifiers.Visible := true;
+        ShowIndicator();
         MoveSel := Floor[sfloor].MonsterCount - 1;
       end;
       if MoveType = 2 then
@@ -5615,8 +5648,7 @@ begin
         Form1.ListBox2.Items.Strings[MoveSel]:='#'+inttostr(MoveSel)+' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].skin); // Refresh object name
         for x := 0 to sizeof(TObj) - 1 do
           pansichar(@Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1])[x] := pansichar(@Floor[sfloor].Obj[MoveSel])[x];
-        lblStatus.Visible := true;
-        lblModifiers.Visible := true;
+        ShowIndicator();
         MoveSel := Floor[sfloor].ObjCount - 1;
       end;
     end;
@@ -5829,8 +5861,7 @@ begin
       end;
       ListBox2Click(Form1);
     end;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     MoveSel := -1;
     firstdrop := false;
     if ctrldw then
@@ -5838,8 +5869,7 @@ begin
       // Form1.CheckListBox1Click(form1);
       if MoveType = 1 then
       begin
-        lblStatus.Visible := true;
-        lblModifiers.Visible := true;
+        ShowIndicator();
         MoveSel := Floor[sfloor].MonsterCount - 1;
         ListBox1.Items.Add('#' + inttostr(MoveSel) + ' - ' + GenerateMonsterName(Floor[sfloor].Monster[Selected],
           Selected, 0));
@@ -5847,8 +5877,7 @@ begin
       end;
       if MoveType = 2 then
       begin
-        lblStatus.Visible := true;
-        lblModifiers.Visible := true;
+        ShowIndicator();
         MoveSel := Floor[sfloor].ObjCount - 1;
         ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[Selected].Skin));
         Selected := MoveSel;
@@ -6254,13 +6283,11 @@ end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  lblStatus.Visible := false;
-  lblModifiers.Visible := false;
+  HideIndicator();
   MoveSel := -1;
   if Selected > -1 then
   begin
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Selected;
     MoveType := stype;
     isedited := true;
@@ -7446,6 +7473,13 @@ begin
   fmHotkeys.ShowModal;
 end;
 
+procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if Button = mbRight then
+    PopupMenu3.Popup(mouse.CursorPos.x, mouse.CursorPos.y);
+end;
+
 procedure TForm1.FormMouseWheelDown(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 var
   mypos: TPoint;
@@ -8112,8 +8146,7 @@ end;
 procedure TForm1.Cancelplacement1Click(Sender: TObject);
 begin
   MoveSel := -1;
-  lblStatus.Visible := false;
-  lblModifiers.Visible := false;
+  HideIndicator();
 end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);

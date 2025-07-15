@@ -6,68 +6,68 @@ object FPlacementOptions: TFPlacementOptions
   ClientHeight = 437
   ClientWidth = 249
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
   Font.Style = []
   Position = poOwnerFormCenter
   OnCreate = FormCreate
-  TextHeight = 15
+  TextHeight = 13
   object Label1: TLabel
     Left = 24
     Top = 95
     Width = 10
-    Height = 15
+    Height = 13
     Caption = 'Z:'
   end
   object Label2: TLabel
     Left = 24
     Top = 65
     Width = 10
-    Height = 15
+    Height = 13
     Caption = 'Y:'
   end
   object Label3: TLabel
     Left = 24
     Top = 35
     Width = 10
-    Height = 15
+    Height = 13
     Caption = 'X:'
   end
   object Label4: TLabel
     Left = 23
     Top = 237
     Width = 10
-    Height = 15
+    Height = 13
     Caption = 'Y:'
   end
   object Label5: TLabel
     Left = 23
     Top = 267
     Width = 10
-    Height = 15
+    Height = 13
     Caption = 'Z:'
   end
   object Label6: TLabel
     Left = 23
     Top = 207
     Width = 10
-    Height = 15
+    Height = 13
     Caption = 'X:'
   end
   object Label7: TLabel
     Left = 23
     Top = 177
-    Width = 42
-    Height = 15
+    Width = 39
+    Height = 13
     Caption = 'Section:'
   end
   object Label8: TLabel
     Left = 24
     Top = 314
-    Width = 118
-    Height = 15
+    Width = 106
+    Height = 13
     Caption = 'Snap tolerance (units):'
   end
   object GroupBox1: TGroupBox
@@ -100,7 +100,7 @@ object FPlacementOptions: TFPlacementOptions
     Left = 104
     Top = 174
     Width = 121
-    Height = 24
+    Height = 22
     MaxValue = 0
     MinValue = 0
     TabOrder = 4
@@ -110,7 +110,7 @@ object FPlacementOptions: TFPlacementOptions
     Left = 168
     Top = 311
     Width = 57
-    Height = 24
+    Height = 22
     MaxValue = 0
     MinValue = 0
     TabOrder = 8
@@ -120,7 +120,7 @@ object FPlacementOptions: TFPlacementOptions
     Left = 104
     Top = 32
     Width = 121
-    Height = 23
+    Height = 21
     Decimal = 3
     Mode = nbmFloat
     TabOrder = 1
@@ -129,7 +129,7 @@ object FPlacementOptions: TFPlacementOptions
     Left = 104
     Top = 65
     Width = 121
-    Height = 23
+    Height = 21
     Decimal = 3
     Mode = nbmFloat
     TabOrder = 2
@@ -138,7 +138,7 @@ object FPlacementOptions: TFPlacementOptions
     Left = 104
     Top = 94
     Width = 121
-    Height = 23
+    Height = 21
     Decimal = 3
     Mode = nbmFloat
     TabOrder = 3
@@ -147,7 +147,7 @@ object FPlacementOptions: TFPlacementOptions
     Left = 104
     Top = 265
     Width = 121
-    Height = 23
+    Height = 21
     Decimal = 3
     Mode = nbmFloat
     TabOrder = 7
@@ -156,7 +156,7 @@ object FPlacementOptions: TFPlacementOptions
     Left = 104
     Top = 236
     Width = 121
-    Height = 23
+    Height = 21
     Decimal = 3
     Mode = nbmFloat
     TabOrder = 6
@@ -165,7 +165,7 @@ object FPlacementOptions: TFPlacementOptions
     Left = 104
     Top = 207
     Width = 121
-    Height = 23
+    Height = 21
     Decimal = 3
     Mode = nbmFloat
     TabOrder = 5
