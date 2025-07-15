@@ -222,6 +222,8 @@ begin
             dec(ini);
             myscreen.TextOut('Q = forward, A = backward, D = Togle data format, F = Togle fog effect, R = Auto-rotate',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
             myscreen.TextOut('Edit: Hold click + CTRL = move, + SHIFT = up/down, + right click = rotate, CTRL + S = Snap',rect(0,form13.Height-50,640,form13.Height-35),$FFFFFFFF,1);
+            if borderStyle = bsNone then
+              myscreen.TextOut('ESC = Exit fullscreen, M = Show main window (Click outside of main window to return to 3D)',rect(0,form13.Height-35,640,form13.Height-20),$FFFFFFFF,1);
         end;
         myscreen.RenderSurface;
         if Keys[Ord('Q')] then GoForward;
@@ -684,6 +686,9 @@ begin
         rtinc := rtinc + 8192
       else rtinc := 0;
     end;
+    // Bring main form above fullscreen 3D window
+    if (key = 'm') and (BorderStyle = bsNone) then
+      Form1.BringToFront;
 end;
 
 procedure TForm13.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);

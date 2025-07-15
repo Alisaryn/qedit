@@ -17,6 +17,7 @@ type
     ComboBox4: TComboBox;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
+    chkFullscreen: TCheckBox;
     procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
@@ -46,6 +47,7 @@ begin
       Reg.WriteInteger('AA',dword(checkbox1.checked));
       Reg.WriteInteger('Dist',combobox4.ItemIndex);
       Reg.WriteInteger('SkyDome',dword(checkbox2.checked));
+      Reg.WriteBool('Fullscreen3D',chkFullscreen.Checked);
       Reg.CloseKey;
     end;
   finally
@@ -67,8 +69,10 @@ begin
       else myscreen.Setclipping(0);
       if form17.CheckBox1.Checked then myscreen.Antializing:=true
       else myscreen.Antializing:=false;
-  end;
-    close;
+  end
+  else
+    myscreen := nil; // Re-render screen next time with new settings.
+  close;
 end;
 
 end.

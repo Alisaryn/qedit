@@ -544,6 +544,7 @@ var
   autoaxis: Boolean = false;
   snaprotate: Boolean = false;
   disableindicator: Boolean = false;
+  fullscreen: Boolean = false;
   OffsetX: single = 0.0;
   OffsetY: single = 0.0;
   OffsetZ: single = 0.0;
@@ -4123,6 +4124,8 @@ begin
           DefaultZ := Reg.ReadFloat('DefaultZ');
         if Reg.ValueExists('DisableIndicator') then
           disableindicator := Reg.ReadBool('DisableIndicator');
+        if Reg.ValueExists('Fullscreen3D') then
+          fullscreen := Reg.ReadBool('Fullscreen3D');
         Reg.CloseKey;
       end;
       Reg.Free;
@@ -4249,6 +4252,7 @@ begin
     Form7.chkAutoAxis.Checked := autoaxis;
     FPlacementOptions.chkSnapRotate.Checked := snaprotate;
     smDisableIndicator.Checked := disableindicator;
+    form17.chkFullscreen.Checked := fullscreen;
     FPlacementOptions.seSnapTolerance.Value := snapvalue;
     FPlacementOptions.nbOffsetX.Value := OffsetX;
     FPlacementOptions.nbOffsetY.Value := OffsetY;
@@ -6994,25 +6998,59 @@ begin
   form14.Show;
   if myscreen = nil then
   begin
-    x := 320;
-    y := 240;
-    if form17.ComboBox1.ItemIndex = 1 then
+    if form17.chkFullscreen.Checked then
     begin
-      x := 640;
-      y := 480;
-    end;
-    if form17.ComboBox1.ItemIndex = 2 then
+      x := Screen.Width;
+      y := Screen.Height;
+      form13.ClientWidth := Screen.Width;
+      form13.ClientHeight := Screen.Height;
+      form13.BorderStyle := bsNone;
+      form13.Position := poDefault;
+    end
+    else
     begin
-      x := 800;
-      y := 600;
+      x := 320;
+      y := 240;
+      if form17.ComboBox1.ItemIndex = 1 then
+      begin
+        x := 640;
+        y := 480;
+      end;
+      if form17.ComboBox1.ItemIndex = 2 then
+      begin
+        x := 800;
+        y := 600;
+      end;
+      if form17.ComboBox1.ItemIndex = 3 then
+      begin
+        x := 1024;
+        y := 768;
+      end;
+      if form17.ComboBox1.ItemIndex = 4 then
+      begin
+        x := 1600;
+        y := 900;
+      end;
+      if form17.ComboBox1.ItemIndex = 5 then
+      begin
+        x := 1920;
+        y := 1080;
+      end;
+      if form17.ComboBox1.ItemIndex = 6 then
+      begin
+        x := 2560;
+        y := 1440;
+      end;
+      if form17.ComboBox1.ItemIndex = 7 then
+      begin
+        x := 3840;
+        y := 2160;
+      end;
+      form13.ClientWidth := x;
+      form13.ClientHeight := y;
+      form13.BorderStyle := bsSizeable;
+      form13.Position := poDefaultPosOnly;
     end;
-    if form17.ComboBox1.ItemIndex = 3 then
-    begin
-      x := 1024;
-      y := 768;
-    end;
-    form13.ClientWidth := x;
-    form13.ClientHeight := y;
 
     myscreen := TPikaEngine.Create(form13.Handle, x, y, form17.combobox2.ItemIndex);
     if myscreen.Enable then
@@ -8145,8 +8183,13 @@ end;
 
 procedure TForm1.Cancelplacement1Click(Sender: TObject);
 begin
-  MoveSel := -1;
-  HideIndicator();
+  if (have3d) and (form13.Focused) and (form13.BorderStyle = bsNone) then
+    form13.close
+  else
+  begin
+    MoveSel := -1;
+    HideIndicator();
+  end;
 end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);
