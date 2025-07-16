@@ -459,6 +459,8 @@ procedure SetMonsterDefaults();
 procedure SetObjectDefaults();
 procedure ShowIndicator();
 procedure HideIndicator();
+procedure AdjustDistanceX(target: integer);
+procedure AdjustDistanceY(target: integer);
 
 var
   Form1: TForm1;
@@ -543,6 +545,7 @@ var
   snapenabled: Boolean = false;
   autoaxis: Boolean = false;
   snaprotate: Boolean = false;
+  snapdistance: Boolean = false;
   disableindicator: Boolean = false;
   fullscreen: Boolean = false;
   OffsetX: single = 0.0;
@@ -2682,6 +2685,223 @@ begin
   end;
 end;
 
+procedure AdjustDistanceX(target: integer);
+var
+  i,diff,diffmin,count: integer;
+  selectionX,targetX: single;
+begin
+  if FPlacementOptions.chkSnapDistance.Checked then
+  begin
+    if have3d and form13.Focused then
+      MoveSel := Selected;
+
+    diffmin := 0;
+    count := 0;
+
+    if sType = 1 then
+    begin
+      selectionX := Floor[sfloor].Monster[MoveSel].Pos_X;
+      targetX := Floor[sfloor].Monster[target].Pos_X;
+      if selectionX < targetX then
+      begin
+         for i := 0 to Floor[sfloor].MonsterCount - 1 do
+         begin
+          // Make sure the monster is visible and of the same section
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+            ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X > targetX)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+              // Find closest monster in opposite direction that is not the snap target or selection
+              diff := round(Floor[sfloor].Monster[i].Pos_X - targetX);
+              count := count + 1;
+              if diff > diffmin then
+              begin
+                diffmin := diff;
+              end;
+            end;
+         end;
+         if diffmin <> 0 then
+          Floor[sfloor].Monster[MoveSel].Pos_X := targetX - (diffmin / count);
+      end
+      else if selectionX > targetX then
+      begin
+         for i := 0 to Floor[sfloor].MonsterCount - 1 do
+         begin
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+            ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X < targetX)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+              diff := round(targetX - Floor[sfloor].Monster[i].Pos_X);
+              count := count + 1;
+              if diff > diffmin then
+              begin
+                diffmin := diff;
+              end;
+            end;
+         end;
+         if diffmin <> 0 then
+          Floor[sfloor].Monster[MoveSel].Pos_X := targetX + (diffmin / count);
+      end;
+    end;
+
+    if sType = 2 then
+    begin
+      selectionX := Floor[sfloor].Obj[MoveSel].Pos_X;
+      targetX := Floor[sfloor].Obj[target].Pos_X;
+
+      if selectionX < targetX then
+      begin
+         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         begin
+          // Make sure the object is visible and of the same section
+          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X > targetX)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+            // Find closest object in opposite direction that is not the snap target or selection
+            diff := round(Floor[sfloor].Obj[i].Pos_X - targetX);
+            count := count + 1;
+            if diff > diffmin then
+            begin
+              diffmin := diff;
+              end;
+            end;
+         end;
+         if diffmin <> 0 then
+          Floor[sfloor].Obj[MoveSel].Pos_X := targetX - (diffmin / count);
+      end
+      else if selectionX > targetX then
+      begin
+         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         begin
+          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X < targetX)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+            diff := round(targetX - Floor[sfloor].Obj[i].Pos_X);
+            count := count + 1;
+            if diff > diffmin then
+            begin
+              diffmin := diff;
+              end;
+            end;
+         end;
+         if diffmin <> 0 then
+          Floor[sfloor].Obj[MoveSel].Pos_X := targetX + (diffmin / count);
+      end;
+    end;
+  end;
+end;
+
+procedure AdjustDistanceY(target: integer);
+var
+  i, diff,diffmin,count: integer;
+  selectionY,targetY: single;
+begin
+  if FPlacementOptions.chkSnapDistance.Checked then
+  begin
+    if have3d and form13.Focused then
+      MoveSel := Selected;
+
+    diffmin := 0;
+    count := 0;
+
+    if sType = 1 then
+    begin
+      selectionY := Floor[sfloor].Monster[MoveSel].Pos_Y;
+      targetY := Floor[sfloor].Monster[target].Pos_Y;
+
+      if selectionY < targetY then
+      begin
+         for i := 0 to Floor[sfloor].MonsterCount - 1 do
+         begin
+          // Make sure the monster is visible and of the same section
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+            ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y > targetY)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+            // Find closest monster in opposite direction that is not the snap target or selection
+            diff := round(Floor[sfloor].Monster[i].Pos_Y - targetY);
+            count := count + 1;
+            if diff > diffmin then
+            begin
+              diffmin := diff;
+              end;
+            end;
+         end;
+         if diffmin <> 0 then
+           Floor[sfloor].Monster[MoveSel].Pos_Y := targetY - (diffmin / count);
+      end
+      else if selectionY > targetY then
+      begin
+         for i := 0 to Floor[sfloor].MonsterCount - 1 do
+         begin
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+            ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y < targetY)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+            diff := round(targetY - Floor[sfloor].Monster[i].Pos_Y);
+            count := count + 1;
+            if diff > diffmin then
+            begin
+              diffmin := diff;
+              end;
+            end;
+         end;
+         if diffmin <> 0 then
+           Floor[sfloor].Monster[MoveSel].Pos_Y := targetY + (diffmin / count);
+      end;
+    end;
+
+    if sType = 2 then
+    begin
+      selectionY := Floor[sfloor].Obj[MoveSel].Pos_Y;
+      targetY := Floor[sfloor].Obj[target].Pos_Y;
+
+      if selectionY < targetY then
+      begin
+         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         begin
+          // Make sure the object is visible and of the same section
+          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y > targetY)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+            // Find closest object in opposite direction that is not the snap target or selection
+            diff := round(Floor[sfloor].Obj[i].Pos_Y - targetY);
+            count := count + 1;
+            if diff > diffmin then
+            begin
+              diffmin := diff;
+              end;
+            end;
+         end;
+         if diffmin <> 0 then
+         Floor[sfloor].Obj[MoveSel].Pos_Y := targetY - (diffmin / count);
+      end
+      else if selectionY > targetY then
+      begin
+         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         begin
+          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y < targetY)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+            diff := round(targetY - Floor[sfloor].Obj[i].Pos_Y);
+            count := count + 1;
+            if diff > diffmin then
+            begin
+              diffmin := diff;
+              end;
+            end;
+         end;
+         if diffmin <> 0 then
+          Floor[sfloor].Obj[MoveSel].Pos_Y := targetY + (diffmin / count);
+      end;
+    end;
+  end;
+end;
+
 procedure TForm1.CheckListBox1Click(Sender: TObject);
 var
   x: integer;
@@ -4108,6 +4328,8 @@ begin
           snapvalue := Reg.ReadInteger('SnapValue');
         if Reg.ValueExists('SnapRotate') then
           snaprotate := Reg.ReadBool('SnapRotate');
+        if Reg.ValueExists('SnapDistance') then
+          snapdistance := Reg.ReadBool('SnapDistance');
         if Reg.ValueExists('OffsetX') then
           OffsetX := Reg.ReadFloat('OffsetX');
         if Reg.ValueExists('OffsetY') then
@@ -4251,6 +4473,7 @@ begin
     smSnap.Checked := snapenabled;
     Form7.chkAutoAxis.Checked := autoaxis;
     FPlacementOptions.chkSnapRotate.Checked := snaprotate;
+    FplacementOptions.chkSnapDistance.Checked := snapdistance;
     smDisableIndicator.Checked := disableindicator;
     form17.chkFullscreen.Checked := fullscreen;
     FPlacementOptions.seSnapTolerance.Value := snapvalue;
@@ -5611,7 +5834,7 @@ end;
 
 procedure TForm1.Image2Click(Sender: TObject);
 var
-  x, d, pz, i, z, y, j, l: integer;
+  x, d, pz, i, z, y, j, l, diff, diffmin, closest: integer;
   px, py, px2, py2, di, pz2: double;
 begin
   if MoveSel > -1 then
@@ -5710,6 +5933,9 @@ begin
     py := py * Zoom;
     // pz:=$0;
 
+    diffmin := High(integer);
+    closest := -1;
+
     if MoveType = 1 then
     begin
       Floor[sfloor].Monster[MoveSel].map_section := d;
@@ -5718,7 +5944,7 @@ begin
 
       if (smSnap.Checked) or (sdown) then // S key
       begin
-        // Vertical snap for monsters
+        // X axis snap for monsters
         for j := 0 to Floor[sfloor].MonsterCount - 1 do
         begin
           for i := 0 to snapvalue do
@@ -5734,12 +5960,25 @@ begin
                   // Match monster's rotations if enabled
                   if FPlacementOptions.chkSnapRotate.Checked then
                     Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
+                  // Save closest snap target
+                  diff := abs(round(Floor[sfloor].Monster[MoveSel].Pos_Y - Floor[sfloor].Monster[j].Pos_Y));
+                  if diff < diffmin then
+                  begin
+                    diffmin := diff;
+                    if j <> MoveSel then
+                      closest := j;
+                  end;
                 end;
               end;
           end;
         end;
+        if closest > -1 then
+          AdjustDistanceY(closest);
 
-        // Horizontal snap for monsters
+        diffmin := High(integer);
+        closest := -1;
+
+        // Z axis snap for monsters
         for j := 0 to Floor[sfloor].MonsterCount - 1 do
         begin
           for i := 0 to snapvalue do
@@ -5754,10 +5993,20 @@ begin
                   Floor[sfloor].Monster[MoveSel].Pos_Y := Floor[sfloor].Monster[j].Pos_Y;
                   if FPlacementOptions.chkSnapRotate.Checked then
                     Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
+                  // Save closest snap target
+                  diff := abs(round(Floor[sfloor].Monster[MoveSel].Pos_X - Floor[sfloor].Monster[j].Pos_X));
+                  if diff < diffmin then
+                  begin
+                    diffmin := diff;
+                    if j <> MoveSel then
+                      closest := j;
+                  end;
                 end;
               end;
           end;
         end;
+        if closest > -1 then
+          AdjustDistanceX(closest);
       end;
 
       // look around to find the best pz
@@ -5794,7 +6043,7 @@ begin
 
       if (smSnap.Checked) or (sdown) then // S key
       begin
-        // Vertical snap for objects
+        // X axis snap for objects
         for j := 0 to Floor[sfloor].ObjCount - 1 do
         begin
           for i := 0 to snapvalue do
@@ -5810,12 +6059,25 @@ begin
                   // Match object's rotations if enabled
                   if FPlacementOptions.chkSnapRotate.Checked then
                     Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
+                  // Save closest snap target
+                  diff := abs(round(Floor[sfloor].Obj[MoveSel].Pos_Y - Floor[sfloor].Obj[j].Pos_Y));
+                  if diff < diffmin then
+                  begin
+                    diffmin := diff;
+                    if j <> MoveSel then
+                      closest := j;
+                  end;
                 end;
               end;
           end;
         end;
+        if closest > -1 then
+          AdjustDistanceY(closest);
 
-        // Horizontal snap for objects
+        diffmin := High(integer);
+        closest := -1;
+
+        // Z axis snap for objects
         for j := 0 to Floor[sfloor].ObjCount - 1 do
         begin
           for i := 0 to snapvalue do
@@ -5830,10 +6092,20 @@ begin
                   Floor[sfloor].Obj[MoveSel].Pos_Y := Floor[sfloor].Obj[j].Pos_Y;
                   if FPlacementOptions.chkSnapRotate.Checked then
                     Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
+                  // Save closest snap target
+                  diff := abs(round(Floor[sfloor].Obj[MoveSel].Pos_X - Floor[sfloor].Obj[j].Pos_X));
+                  if diff < diffmin then
+                  begin
+                    diffmin := diff;
+                    if j <> MoveSel then
+                      closest := j;
+                  end;
                 end;
               end;
           end;
         end;
+        if closest > -1 then
+          AdjustDistanceX(closest);
       end;
 
       if not altdw or firstdrop then
@@ -7163,10 +7435,8 @@ begin
   FPlacementOptions.showmodal();
   // Update based on snap preferences
   snapvalue := FPlacementOptions.seSnapTolerance.Value;
-  if FPlacementOptions.chkSnapRotate.Checked then
-    snaprotate := true
-  else
-    snaprotate := false;
+  snaprotate := FPlacementOptions.chkSnapRotate.Checked;
+  snapdistance := FPlacementOptions.chkSnapDistance.Checked;
 end;
 
 procedure TForm1.smDeleteClick(Sender: TObject);

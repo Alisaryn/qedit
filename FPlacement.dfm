@@ -3,8 +3,8 @@ object FPlacementOptions: TFPlacementOptions
   Top = 0
   BorderStyle = bsToolWindow
   Caption = 'Placement Options'
-  ClientHeight = 437
-  ClientWidth = 249
+  ClientHeight = 442
+  ClientWidth = 200
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -64,8 +64,8 @@ object FPlacementOptions: TFPlacementOptions
     Caption = 'Section:'
   end
   object Label8: TLabel
-    Left = 24
-    Top = 314
+    Left = 8
+    Top = 308
     Width = 106
     Height = 13
     Caption = 'Snap tolerance (units):'
@@ -73,7 +73,7 @@ object FPlacementOptions: TFPlacementOptions
   object GroupBox1: TGroupBox
     Left = 8
     Top = 8
-    Width = 233
+    Width = 185
     Height = 121
     Caption = 'Offset selection'
     TabOrder = 0
@@ -81,25 +81,25 @@ object FPlacementOptions: TFPlacementOptions
   object GroupBox3: TGroupBox
     Left = 8
     Top = 146
-    Width = 233
+    Width = 185
     Height = 153
     Caption = 'Default placement'
-    TabOrder = 12
+    TabOrder = 13
   end
   object btnSave: TButton
-    Left = 87
-    Top = 366
+    Left = 55
+    Top = 373
     Width = 75
     Height = 25
     Caption = 'Save'
     Default = True
-    TabOrder = 10
+    TabOrder = 11
     OnClick = btnSaveClick
   end
   object seDefaultSect: TSpinEdit
     Left = 104
     Top = 174
-    Width = 121
+    Width = 73
     Height = 22
     MaxValue = 0
     MinValue = 0
@@ -107,8 +107,8 @@ object FPlacementOptions: TFPlacementOptions
     Value = 0
   end
   object seSnapTolerance: TSpinEdit
-    Left = 168
-    Top = 311
+    Left = 120
+    Top = 305
     Width = 57
     Height = 22
     MaxValue = 0
@@ -118,8 +118,8 @@ object FPlacementOptions: TFPlacementOptions
   end
   object nbOffsetX: TNumberBox
     Left = 104
-    Top = 32
-    Width = 121
+    Top = 38
+    Width = 73
     Height = 21
     Decimal = 3
     Mode = nbmFloat
@@ -128,7 +128,7 @@ object FPlacementOptions: TFPlacementOptions
   object nbOffsetY: TNumberBox
     Left = 104
     Top = 65
-    Width = 121
+    Width = 73
     Height = 21
     Decimal = 3
     Mode = nbmFloat
@@ -136,8 +136,8 @@ object FPlacementOptions: TFPlacementOptions
   end
   object nbOffsetZ: TNumberBox
     Left = 104
-    Top = 94
-    Width = 121
+    Top = 92
+    Width = 73
     Height = 21
     Decimal = 3
     Mode = nbmFloat
@@ -146,7 +146,7 @@ object FPlacementOptions: TFPlacementOptions
   object nbDefaultZ: TNumberBox
     Left = 104
     Top = 265
-    Width = 121
+    Width = 73
     Height = 21
     Decimal = 3
     Mode = nbmFloat
@@ -155,7 +155,7 @@ object FPlacementOptions: TFPlacementOptions
   object nbDefaultY: TNumberBox
     Left = 104
     Top = 236
-    Width = 121
+    Width = 73
     Height = 21
     Decimal = 3
     Mode = nbmFloat
@@ -164,27 +164,35 @@ object FPlacementOptions: TFPlacementOptions
   object nbDefaultX: TNumberBox
     Left = 104
     Top = 207
-    Width = 121
+    Width = 73
     Height = 21
     Decimal = 3
     Mode = nbmFloat
     TabOrder = 5
   end
   object btnReset: TButton
-    Left = 87
-    Top = 397
+    Left = 55
+    Top = 404
     Width = 75
     Height = 25
     Caption = 'Defaults'
-    TabOrder = 11
+    TabOrder = 12
     OnClick = btnResetClick
   end
   object chkSnapRotate: TCheckBox
-    Left = 23
-    Top = 335
+    Left = 8
+    Top = 342
     Width = 98
     Height = 17
     Caption = 'Snap rotation'
     TabOrder = 9
+  end
+  object chkSnapDistance: TCheckBox
+    Left = 104
+    Top = 342
+    Width = 98
+    Height = 17
+    Caption = 'Snap distance'
+    TabOrder = 10
   end
 end

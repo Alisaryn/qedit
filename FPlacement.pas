@@ -30,6 +30,7 @@ type
     nbDefaultX: TNumberBox;
     btnReset: TButton;
     chkSnapRotate: TCheckBox;
+    chkSnapDistance: TCheckBox;
     procedure btnSaveClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -65,6 +66,7 @@ begin
       Reg.WriteFloat('DefaultZ', nbDefaultZ.Value);
       Reg.WriteInteger('SnapValue', seSnapTolerance.Value);
       Reg.WriteBool('SnapRotate', chkSnapRotate.Checked);
+      Reg.WriteBool('SnapDistance', chkSnapDistance.Checked);
       Reg.CloseKey;
     end;
   finally
@@ -108,6 +110,7 @@ begin
   nbDefaultZ.Value := 0.0;
   seSnapTolerance.Value := 10;
   chkSnapRotate.Checked := false;
+  chkSnapDistance.Checked := false;
 end;
 
 end.

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, D3Dx9, StdCtrls, FPlacement;
+  Dialogs, ExtCtrls, D3Dx9, StdCtrls;
 
 type
   TForm13 = class(TForm)
@@ -56,7 +56,7 @@ var
 
 implementation
 
-uses main, Unit1, MyConst;
+uses main, Unit1, MyConst, FPlacement;
 
 {$R *.dfm}
 
@@ -223,7 +223,7 @@ begin
             myscreen.TextOut('Q = forward, A = backward, D = Togle data format, F = Togle fog effect, R = Auto-rotate',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
             myscreen.TextOut('Edit: Hold click + CTRL = move, + SHIFT = up/down, + right click = rotate, CTRL + S = Snap',rect(0,form13.Height-50,640,form13.Height-35),$FFFFFFFF,1);
             if borderStyle = bsNone then
-              myscreen.TextOut('ESC = Exit fullscreen, M = Show main window (Click outside of main window to return to 3D)',rect(0,form13.Height-35,640,form13.Height-20),$FFFFFFFF,1);
+              myscreen.TextOut('ESC = Exit fullscreen, M = Show main window (Click outside main window to return to 3D)',rect(0,form13.Height-35,640,form13.Height-20),$FFFFFFFF,1);
         end;
         myscreen.RenderSurface;
         if Keys[Ord('Q')] then GoForward;
@@ -281,7 +281,7 @@ procedure TForm13.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
 
 var v,rayOrigin,rayDir:TD3DXVECTOR3;
     m,n:TD3DXMATRIX;
-    i,c,j:integer;
+    i,c,j,diff,diffmin,closest:integer;
     rt:dword;
     px2,px3,py2,py3:single;
 begin
@@ -323,6 +323,10 @@ begin
             inc(c);
         end;
         snapvalue := FPlacementOptions.seSnapTolerance.Value;
+
+        diffmin := High(integer);
+        closest := -1;
+
         if stype = 1 then begin
             mymonst[selected].PositionX:=rayOrigin.x;
             mymonst[selected].PositionZ:=rayOrigin.z;
@@ -337,7 +341,7 @@ begin
 
             if (Form1.smSnap.Checked) or (Keys[Ord('S')]) then
             begin
-              // 3D vertical snap for monsters
+              // 3D X axis snap for monsters
               for j := 0 to Floor[sfloor].MonsterCount - 1 do
               begin
                 for i := 0 to snapvalue do
@@ -349,16 +353,32 @@ begin
                       or ((round(Floor[sfloor].Monster[j].Pos_X - i)) = round(px3)) then
                       begin
                         floor[sfloor].Monster[selected].Pos_X := floor[sfloor].Monster[j].Pos_X;
-                        mymonst[selected].PositionX := mymonst[j].PositionX;
+                        // Match monster's rotations if enabled
                         if (FPlacementOptions.chkSnapRotate.Checked) then
                           floor[sfloor].Monster[selected].Direction := floor[sfloor].Monster[j].Direction;
+                        // Save closest snap target
+                        diff := abs(round(Floor[sfloor].Monster[MoveSel].Pos_Y - Floor[sfloor].Monster[j].Pos_Y));
+                        if diff < diffmin then
+                        begin
+                          diffmin := diff;
+                          if j <> MoveSel then
+                            closest := j;
+                        end;
                         GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
                       end;
                     end;
                 end;
               end;
+              if closest > -1 then
+              begin
+                AdjustDistanceY(closest);
+                GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
+              end;
 
-              // 3D horizontal snap for monsters
+              diffmin := High(integer);
+              closest := -1;
+
+              // 3D Z axis snap for monsters
               for j := 0 to Floor[sfloor].MonsterCount - 1 do
               begin
                 for i := 0 to snapvalue do
@@ -370,13 +390,25 @@ begin
                       or ((round(Floor[sfloor].Monster[j].Pos_Y - i)) = round(py3)) then
                       begin
                         floor[sfloor].Monster[selected].Pos_Y := floor[sfloor].Monster[j].Pos_Y;
-                        mymonst[selected].PositionY := mymonst[j].PositionY;
                         if (FPlacementOptions.chkSnapRotate.Checked) then
                           floor[sfloor].Monster[selected].Direction := floor[sfloor].Monster[j].Direction;
+                        // Save closest snap target
+                        diff := abs(round(Floor[sfloor].Monster[MoveSel].Pos_X - Floor[sfloor].Monster[j].Pos_X));
+                        if diff < diffmin then
+                        begin
+                          diffmin := diff;
+                          if j <> MoveSel then
+                            closest := j;
+                        end;
                         GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
                       end;
                     end;
                 end;
+              end;
+              if closest > -1 then
+              begin
+                AdjustDistanceX(closest);
+                GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
               end;
             end;
 
@@ -398,7 +430,7 @@ begin
 
             if (Form1.smSnap.Checked) or (Keys[Ord('S')]) then
             begin
-              // 3D vertical snap for objects
+              // 3D X axis snap for objects
               for j := 0 to Floor[sfloor].ObjCount - 1 do
               begin
                 for i := 0 to snapvalue do
@@ -411,8 +443,17 @@ begin
                       begin
                         floor[sfloor].Obj[selected].Pos_X := floor[sfloor].Obj[j].Pos_X;
                         myobj[selected].PositionX := myobj[j].PositionX;
+                        // Match object's rotations if enabled
                         if (FPlacementOptions.chkSnapRotate.Checked) then
                           floor[sfloor].Obj[selected].unknow6 := floor[sfloor].Obj[j].unknow6;
+                        // Save closest snap target
+                        diff := abs(round(Floor[sfloor].Obj[MoveSel].Pos_Y - Floor[sfloor].Obj[j].Pos_Y));
+                        if diff < diffmin then
+                        begin
+                          diffmin := diff;
+                          if j <> MoveSel then
+                            closest := j;
+                        end;
                         myobj[selected].Free;
                         Generateobj(floor[sfloor].obj[selected],selected);
                       end;
@@ -420,7 +461,17 @@ begin
                 end;
               end;
 
-              // 3D horizontal snap for objects
+              if closest > -1 then
+              begin
+                AdjustDistanceY(closest);
+                myobj[selected].Free;
+                Generateobj(floor[sfloor].obj[selected],selected);
+              end;
+
+              diffmin := High(integer);
+              closest := -1;
+
+              // 3D Z axis snap for objects
               for j := 0 to Floor[sfloor].ObjCount - 1 do
               begin
                 for i := 0 to snapvalue do
@@ -435,11 +486,25 @@ begin
                         myobj[selected].PositionY := myobj[j].PositionY;
                         if (FPlacementOptions.chkSnapRotate.Checked) then
                           floor[sfloor].Obj[selected].unknow6 := floor[sfloor].Obj[j].unknow6;
+                        // Save closest snap target
+                        diff := abs(round(Floor[sfloor].Obj[MoveSel].Pos_X - Floor[sfloor].Obj[j].Pos_X));
+                        if diff < diffmin then
+                        begin
+                          diffmin := diff;
+                          if j <> MoveSel then
+                            closest := j;
+                        end;
                         myobj[selected].Free;
                         Generateobj(floor[sfloor].obj[selected],selected);
                       end;
                     end;
                 end;
+              end;
+              if closest > -1 then
+              begin
+                AdjustDistanceX(closest);
+                myobj[selected].Free;
+                Generateobj(floor[sfloor].obj[selected],selected);
               end;
             end;
 
