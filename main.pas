@@ -327,6 +327,7 @@ type
     Cancelplacement1: TMenuItem;
     PopupMenu3: TPopupMenu;
     smDisableIndicator: TMenuItem;
+    Hidemainwindow1: TMenuItem;
     procedure Quit1Click(Sender: TObject);
     procedure Load1Click(Sender: TObject);
     procedure CheckListBox1Click(Sender: TObject);
@@ -434,6 +435,8 @@ type
     procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure smDisableIndicatorClick(Sender: TObject);
+    procedure Hidemainwindow1Click(Sender: TObject);
+
 
   private
     procedure MenueDrawItemX(xMenu: TMenu);
@@ -2720,7 +2723,7 @@ begin
               end;
             end;
          end;
-         if diffmin <> 0 then
+         if (diffmin <> 0) and (count <> 0) then
           Floor[sfloor].Monster[MoveSel].Pos_X := targetX - (diffmin / count);
       end
       else if selectionX > targetX then
@@ -2739,7 +2742,7 @@ begin
               end;
             end;
          end;
-         if diffmin <> 0 then
+         if (diffmin <> 0) and (count <> 0) then
           Floor[sfloor].Monster[MoveSel].Pos_X := targetX + (diffmin / count);
       end;
     end;
@@ -2767,7 +2770,7 @@ begin
               end;
             end;
          end;
-         if diffmin <> 0 then
+         if (diffmin <> 0) and (count <> 0) then
           Floor[sfloor].Obj[MoveSel].Pos_X := targetX - (diffmin / count);
       end
       else if selectionX > targetX then
@@ -2786,7 +2789,7 @@ begin
               end;
             end;
          end;
-         if diffmin <> 0 then
+         if (diffmin <> 0) and (count <> 0) then
           Floor[sfloor].Obj[MoveSel].Pos_X := targetX + (diffmin / count);
       end;
     end;
@@ -2829,7 +2832,7 @@ begin
               end;
             end;
          end;
-         if diffmin <> 0 then
+         if (diffmin <> 0) and (count <> 0) then
            Floor[sfloor].Monster[MoveSel].Pos_Y := targetY - (diffmin / count);
       end
       else if selectionY > targetY then
@@ -2848,7 +2851,7 @@ begin
               end;
             end;
          end;
-         if diffmin <> 0 then
+         if (diffmin <> 0) and (count <> 0) then
            Floor[sfloor].Monster[MoveSel].Pos_Y := targetY + (diffmin / count);
       end;
     end;
@@ -2876,8 +2879,8 @@ begin
               end;
             end;
          end;
-         if diffmin <> 0 then
-         Floor[sfloor].Obj[MoveSel].Pos_Y := targetY - (diffmin / count);
+         if (diffmin <> 0) and (count <> 0) then
+          Floor[sfloor].Obj[MoveSel].Pos_Y := targetY - (diffmin / count);
       end
       else if selectionY > targetY then
       begin
@@ -2895,7 +2898,7 @@ begin
               end;
             end;
          end;
-         if diffmin <> 0 then
+         if (diffmin <> 0) and (count <> 0) then
           Floor[sfloor].Obj[MoveSel].Pos_Y := targetY + (diffmin / count);
       end;
     end;
@@ -3828,7 +3831,7 @@ begin
               vz := 0;
               myscreen.SetView(ppx, ppy, ppz, vr, vz);
             end;
-            if gettickcount() - lastimgclick > 1000 then
+            if gettickcount() - lastimgclick > 500 then
               l := -1;
             if l = ListBox1.ItemIndex then
               Form1.ListBox1DblClick(Form1)
@@ -3874,7 +3877,7 @@ begin
               vz := 0;
               myscreen.SetView(ppx, ppy, ppz, vr, vz);
             end;
-            if gettickcount() - lastimgclick > 1000 then
+            if gettickcount() - lastimgclick > 500 then
               l := -1;
             if l = ListBox2.ItemIndex then
               Form1.ListBox1DblClick(Form1)
@@ -7774,6 +7777,17 @@ procedure TForm1.help1Click(Sender: TObject);
 begin
   if Form1.Active then
     ShellExecute(0, 'open', 'https://qedit.info/', '', '', 0);
+end;
+
+procedure TForm1.Hidemainwindow1Click(Sender: TObject);
+begin
+   if (have3d) and (form13.BorderStyle = bsNone) and (not form13.Focused) then
+    Form1.WindowState := wsMinimized
+   else
+   begin
+    Form1.WindowState := wsNormal;
+    Form1.BringToFront;
+   end;
 end;
 
 procedure TForm1.Hotkeys1Click(Sender: TObject);

@@ -670,6 +670,11 @@ object Form1: TForm1
         ShortCut = 27
         OnClick = Cancelplacement1Click
       end
+      object Hidemainwindow1: TMenuItem
+        Caption = 'Hide main window'
+        ShortCut = 77
+        OnClick = Hidemainwindow1Click
+      end
     end
   end
   object OpenDialog1: TOpenDialog
@@ -1614,6 +1619,7 @@ object Form1: TForm1
     end
   end
   object PopupMenu3: TPopupMenu
+    AutoPopup = False
     MenuAnimation = [maLeftToRight]
     Left = 396
     Top = 10

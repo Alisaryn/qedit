@@ -71,7 +71,13 @@ begin
       else myscreen.Antializing:=false;
   end
   else
-    myscreen := nil; // Re-render screen next time with new settings.
+  // Re-render screen next time with new settings.
+  if myscreen <> nil then
+  begin
+    myscreen.Free;
+    myscreen := nil;
+  end;
+
   close;
 end;
 

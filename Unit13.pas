@@ -220,10 +220,10 @@ begin
 
         if ini > 0 then begin
             dec(ini);
-            myscreen.TextOut('Q = forward, A = backward, D = Togle data format, F = Togle fog effect, R = Auto-rotate',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
-            myscreen.TextOut('Edit: Hold click + CTRL = move, + SHIFT = up/down, + right click = rotate, CTRL + S = Snap',rect(0,form13.Height-50,640,form13.Height-35),$FFFFFFFF,1);
+            myscreen.TextOut('Q = Forward, A = Backward, D = Toggle data format, F = Toggle fog effect, R = Auto-rotate',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
+            myscreen.TextOut('Edit: Hold click + CTRL = Move, + SHIFT = Up/down, + right-click = Rotate, CTRL + S = Snap',rect(0,form13.Height-50,640,form13.Height-35),$FFFFFFFF,1);
             if borderStyle = bsNone then
-              myscreen.TextOut('ESC = Exit fullscreen, M = Show main window (Click outside main window to return to 3D)',rect(0,form13.Height-35,640,form13.Height-20),$FFFFFFFF,1);
+              myscreen.TextOut('ESC = Exit fullscreen, M = Toggle main window',rect(0,form13.Height-35,640,form13.Height-20),$FFFFFFFF,1);
         end;
         myscreen.RenderSurface;
         if Keys[Ord('Q')] then GoForward;
@@ -364,16 +364,12 @@ begin
                           if j <> MoveSel then
                             closest := j;
                         end;
-                        GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
                       end;
                     end;
                 end;
               end;
               if closest > -1 then
-              begin
                 AdjustDistanceY(closest);
-                GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
-              end;
 
               diffmin := High(integer);
               closest := -1;
@@ -400,16 +396,13 @@ begin
                           if j <> MoveSel then
                             closest := j;
                         end;
-                        GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
                       end;
                     end;
                 end;
               end;
               if closest > -1 then
-              begin
                 AdjustDistanceX(closest);
-                GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
-              end;
+              GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
             end;
 
             sel3d.SetCoordinate(mymonst[selected].PositionX ,
@@ -454,19 +447,13 @@ begin
                           if j <> MoveSel then
                             closest := j;
                         end;
-                        myobj[selected].Free;
-                        Generateobj(floor[sfloor].obj[selected],selected);
                       end;
                     end;
                 end;
               end;
 
               if closest > -1 then
-              begin
                 AdjustDistanceY(closest);
-                myobj[selected].Free;
-                Generateobj(floor[sfloor].obj[selected],selected);
-              end;
 
               diffmin := High(integer);
               closest := -1;
@@ -494,18 +481,14 @@ begin
                           if j <> MoveSel then
                             closest := j;
                         end;
-                        myobj[selected].Free;
-                        Generateobj(floor[sfloor].obj[selected],selected);
                       end;
                     end;
                 end;
               end;
               if closest > -1 then
-              begin
                 AdjustDistanceX(closest);
-                myobj[selected].Free;
-                Generateobj(floor[sfloor].obj[selected],selected);
-              end;
+              myobj[selected].Free;
+              Generateobj(floor[sfloor].obj[selected],selected);
             end;
 
             sel3d.SetCoordinate(MyObj[selected].PositionX ,
@@ -719,6 +702,11 @@ procedure TForm13.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
     timer1.Enabled:=false;
     have3d:=false;
+    if form13.BorderStyle = bsNone then
+    begin
+      Form1.WindowState := wsNormal;
+      Form1.BringToFront;
+    end;
 end;
 
 procedure TForm13.FormKeyDown(Sender: TObject; var Key: Word;
@@ -751,9 +739,6 @@ begin
         rtinc := rtinc + 8192
       else rtinc := 0;
     end;
-    // Bring main form above fullscreen 3D window
-    if (key = 'm') and (BorderStyle = bsNone) then
-      Form1.BringToFront;
 end;
 
 procedure TForm13.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
