@@ -64,14 +64,14 @@ object FPlacementOptions: TFPlacementOptions
     Caption = 'Section:'
   end
   object Label8: TLabel
-    Left = 15
+    Left = 19
     Top = 319
     Width = 106
     Height = 13
     Caption = 'Snap tolerance (units):'
   end
   object Label9: TLabel
-    Left = 15
+    Left = 19
     Top = 347
     Width = 105
     Height = 13
@@ -114,7 +114,7 @@ object FPlacementOptions: TFPlacementOptions
     Value = 0
   end
   object seSnapTolerance: TSpinEdit
-    Left = 136
+    Left = 140
     Top = 316
     Width = 41
     Height = 22
@@ -204,7 +204,7 @@ object FPlacementOptions: TFPlacementOptions
     OnClick = chkSnapDistanceClick
   end
   object seDistanceLimit: TSpinEdit
-    Left = 136
+    Left = 140
     Top = 344
     Width = 41
     Height = 22
