@@ -1,7 +1,6 @@
 object FPlacementOptions: TFPlacementOptions
   Left = 0
   Top = 0
-  ActiveControl = nbOffsetX
   BorderStyle = bsToolWindow
   Caption = 'Placement Options'
   ClientHeight = 443
