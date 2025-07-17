@@ -1,9 +1,10 @@
 object FPlacementOptions: TFPlacementOptions
   Left = 0
   Top = 0
+  ActiveControl = nbOffsetX
   BorderStyle = bsToolWindow
   Caption = 'Placement Options'
-  ClientHeight = 408
+  ClientHeight = 443
   ClientWidth = 200
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
@@ -64,11 +65,18 @@ object FPlacementOptions: TFPlacementOptions
     Caption = 'Section:'
   end
   object Label8: TLabel
-    Left = 18
-    Top = 292
+    Left = 15
+    Top = 319
     Width = 106
     Height = 13
     Caption = 'Snap tolerance (units):'
+  end
+  object Label9: TLabel
+    Left = 15
+    Top = 347
+    Width = 105
+    Height = 13
+    Caption = 'Distance limit (0: max):'
   end
   object GroupBox1: TGroupBox
     Left = 8
@@ -84,16 +92,16 @@ object FPlacementOptions: TFPlacementOptions
     Width = 185
     Height = 148
     Caption = 'Default placement'
-    TabOrder = 13
+    TabOrder = 14
   end
   object btnSave: TButton
     Left = 55
-    Top = 341
+    Top = 376
     Width = 75
     Height = 25
     Caption = 'Save'
     Default = True
-    TabOrder = 11
+    TabOrder = 12
     OnClick = btnSaveClick
   end
   object seDefaultSect: TSpinEdit
@@ -108,12 +116,12 @@ object FPlacementOptions: TFPlacementOptions
   end
   object seSnapTolerance: TSpinEdit
     Left = 136
-    Top = 289
+    Top = 316
     Width = 41
     Height = 22
     MaxValue = 0
     MinValue = 0
-    TabOrder = 8
+    TabOrder = 10
     Value = 0
   end
   object nbOffsetX: TNumberBox
@@ -172,27 +180,39 @@ object FPlacementOptions: TFPlacementOptions
   end
   object btnReset: TButton
     Left = 55
-    Top = 372
+    Top = 407
     Width = 75
     Height = 25
     Caption = 'Defaults'
-    TabOrder = 12
+    TabOrder = 13
     OnClick = btnResetClick
   end
   object chkSnapRotate: TCheckBox
-    Left = 15
-    Top = 317
+    Left = 8
+    Top = 289
     Width = 98
     Height = 17
     Caption = 'Snap rotation'
-    TabOrder = 9
+    TabOrder = 8
   end
   object chkSnapDistance: TCheckBox
-    Left = 103
-    Top = 317
+    Left = 104
+    Top = 289
     Width = 98
     Height = 17
     Caption = 'Snap distance'
-    TabOrder = 10
+    TabOrder = 9
+    OnClick = chkSnapDistanceClick
+  end
+  object seDistanceLimit: TSpinEdit
+    Left = 136
+    Top = 344
+    Width = 41
+    Height = 22
+    Enabled = False
+    MaxValue = 0
+    MinValue = 0
+    TabOrder = 11
+    Value = 0
   end
 end
