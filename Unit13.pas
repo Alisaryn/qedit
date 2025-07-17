@@ -223,7 +223,7 @@ begin
             myscreen.TextOut('Q = Forward, A = Backward, D = Toggle data format, F = Toggle fog effect, R = Auto-rotate',rect(0,form13.Height-65,640,form13.Height-50),$FFFFFFFF,1);
             myscreen.TextOut('Edit: Hold click + CTRL = Move, + SHIFT = Up/down, + right-click = Rotate, CTRL + S = Snap',rect(0,form13.Height-50,640,form13.Height-35),$FFFFFFFF,1);
             if borderStyle = bsNone then
-              myscreen.TextOut('ESC = Exit fullscreen, M = Show or hide main window, click outside of window to return to 3D',rect(0,form13.Height-35,640,form13.Height-20),$FFFFFFFF,1);
+              myscreen.TextOut('ESC = Exit fullscreen, M = Show/hide main window (Click outside of window to return to 3D)',rect(0,form13.Height-35,640,form13.Height-20),$FFFFFFFF,1);
         end;
         myscreen.RenderSurface;
         if Keys[Ord('Q')] then GoForward;
