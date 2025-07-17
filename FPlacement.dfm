@@ -187,7 +187,7 @@ object FPlacementOptions: TFPlacementOptions
     OnClick = btnResetClick
   end
   object chkSnapRotate: TCheckBox
-    Left = 8
+    Left = 15
     Top = 289
     Width = 98
     Height = 17
