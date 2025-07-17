@@ -325,6 +325,9 @@ type
     Undo1: TMenuItem;
     Options1: TMenuItem;
     Cancelplacement1: TMenuItem;
+    PopupMenu3: TPopupMenu;
+    smDisableIndicator: TMenuItem;
+    Hidemainwindow1: TMenuItem;
     procedure Quit1Click(Sender: TObject);
     procedure Load1Click(Sender: TObject);
     procedure CheckListBox1Click(Sender: TObject);
@@ -429,6 +432,11 @@ type
     procedure Cancelplacement1Click(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure smDisableIndicatorClick(Sender: TObject);
+    procedure Hidemainwindow1Click(Sender: TObject);
+
 
   private
     procedure MenueDrawItemX(xMenu: TMenu);
@@ -452,6 +460,10 @@ procedure ClearShadow;
 Function GetLanguageString(id: integer): ansistring;
 procedure SetMonsterDefaults();
 procedure SetObjectDefaults();
+procedure ShowIndicator();
+procedure HideIndicator();
+procedure AdjustDistanceX(target: integer);
+procedure AdjustDistanceY(target: integer);
 
 var
   Form1: TForm1;
@@ -532,10 +544,14 @@ var
   lastloadformat: integer = 3;
   lsatsaveformat: integer = 4;
   snapvalue: integer = 10;
+  distancelimit: integer = 0;
   dragenabled: Boolean = false;
   snapenabled: Boolean = false;
   autoaxis: Boolean = false;
   snaprotate: Boolean = false;
+  snapdistance: Boolean = false;
+  disableindicator: Boolean = false;
+  fullscreen: Boolean = false;
   OffsetX: single = 0.0;
   OffsetY: single = 0.0;
   OffsetZ: single = 0.0;
@@ -2057,8 +2073,7 @@ begin
     curepi := 0;
     fillchar(BBData[0], sizeof(BBData), 0);
     MoveSel := -1;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     path := extractfilepath(application.ExeName);
     fn := OpenDialog1.filename;
     FullQuestFile := fn;
@@ -2656,14 +2671,239 @@ begin
   Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1].Pos_Z := FPlacementOptions.nbDefaultY.Value;
 end;
 
+procedure ShowIndicator();
+begin
+  if not Form1.smDisableIndicator.Checked then
+  begin
+    Form1.lblStatus.Visible := true;
+    Form1.lblModifiers.Visible := true;
+  end;
+end;
+
+procedure HideIndicator();
+begin
+  if not Form1.smDisableIndicator.Checked then
+  begin
+    Form1.lblStatus.Visible := false;
+    Form1.lblModifiers.Visible := false;
+  end;
+end;
+
+procedure AdjustDistanceX(target: integer);
+var
+  i,diff,diffmin,count: integer;
+  selectionX,targetX: single;
+begin
+  if FPlacementOptions.chkSnapDistance.Checked then
+  begin
+    distancelimit := FPlacementOptions.seDistanceLimit.Value;
+    if distancelimit = 0 then distancelimit := High(integer);
+
+    if have3d and form13.Focused then
+      MoveSel := Selected;
+
+    diffmin := 0;
+    count := 0;
+
+    if sType = 1 then
+    begin
+      selectionX := Floor[sfloor].Monster[MoveSel].Pos_X;
+      targetX := Floor[sfloor].Monster[target].Pos_X;
+      if selectionX < targetX then
+      begin
+         for i := 0 to Floor[sfloor].MonsterCount - 1 do
+         begin
+          // Make sure the monster is visible and of the same section
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+            ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X > targetX)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+              // Find closest monster in opposite direction that is not the snap target or selection
+              diff := round(Floor[sfloor].Monster[i].Pos_X - targetX);
+              count := count + 1;
+              if diff > diffmin then
+                diffmin := diff;
+            end;
+         end;
+         // Check count <> 0 condition first (left to right) to avoid divide by zero errors
+         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
+          Floor[sfloor].Monster[MoveSel].Pos_X := targetX - (diffmin / count);
+      end
+      else if selectionX > targetX then
+      begin
+         for i := 0 to Floor[sfloor].MonsterCount - 1 do
+         begin
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+            ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X < targetX)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+              diff := round(targetX - Floor[sfloor].Monster[i].Pos_X);
+              count := count + 1;
+              if diff > diffmin then
+                diffmin := diff;
+            end;
+         end;
+         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
+          Floor[sfloor].Monster[MoveSel].Pos_X := targetX + (diffmin / count);
+      end;
+    end;
+
+    if sType = 2 then
+    begin
+      selectionX := Floor[sfloor].Obj[MoveSel].Pos_X;
+      targetX := Floor[sfloor].Obj[target].Pos_X;
+
+      if selectionX < targetX then
+      begin
+         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         begin
+          // Make sure the object is visible and of the same section
+          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X > targetX)
+            and (i <> target) and (i <> MoveSel) then
+          begin
+            // Find closest object in opposite direction that is not the snap target or selection
+            diff := round(Floor[sfloor].Obj[i].Pos_X - targetX);
+            count := count + 1;
+              if diff > diffmin then
+                diffmin := diff;
+          end;
+         end;
+         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
+          Floor[sfloor].Obj[MoveSel].Pos_X := targetX - (diffmin / count);
+      end
+      else if selectionX > targetX then
+      begin
+         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         begin
+          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X < targetX)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+              diff := round(targetX - Floor[sfloor].Obj[i].Pos_X);
+              count := count + 1;
+              if diff > diffmin then
+                diffmin := diff;
+            end;
+         end;
+         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
+          Floor[sfloor].Obj[MoveSel].Pos_X := targetX + (diffmin / count);
+      end;
+    end;
+  end;
+end;
+
+procedure AdjustDistanceY(target: integer);
+var
+  i,diff,diffmin,count: integer;
+  selectionY,targetY: single;
+begin
+  if FPlacementOptions.chkSnapDistance.Checked then
+  begin
+    distancelimit := FPlacementOptions.seDistanceLimit.Value;
+    if distancelimit = 0 then distancelimit := High(integer);
+
+    if have3d and form13.Focused then
+      MoveSel := Selected;
+
+    diffmin := 0;
+    count := 0;
+
+    if sType = 1 then
+    begin
+      selectionY := Floor[sfloor].Monster[MoveSel].Pos_Y;
+      targetY := Floor[sfloor].Monster[target].Pos_Y;
+
+      if selectionY < targetY then
+      begin
+         for i := 0 to Floor[sfloor].MonsterCount - 1 do
+         begin
+          // Make sure the monster is visible and of the same section
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+            ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y > targetY)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+              // Find closest monster in opposite direction that is not the snap target or selection
+              diff := round(Floor[sfloor].Monster[i].Pos_Y - targetY);
+              count := count + 1;
+              if diff > diffmin then
+                diffmin := diff;
+            end;
+         end;
+         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
+           Floor[sfloor].Monster[MoveSel].Pos_Y := targetY - (diffmin / count);
+      end
+      else if selectionY > targetY then
+      begin
+         for i := 0 to Floor[sfloor].MonsterCount - 1 do
+         begin
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+            ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y < targetY)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+              diff := round(targetY - Floor[sfloor].Monster[i].Pos_Y);
+              count := count + 1;
+              if diff > diffmin then
+                diffmin := diff;
+            end;
+         end;
+         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
+           Floor[sfloor].Monster[MoveSel].Pos_Y := targetY + (diffmin / count);
+      end;
+    end;
+
+    if sType = 2 then
+    begin
+      selectionY := Floor[sfloor].Obj[MoveSel].Pos_Y;
+      targetY := Floor[sfloor].Obj[target].Pos_Y;
+
+      if selectionY < targetY then
+      begin
+         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         begin
+          // Make sure the object is visible and of the same section
+          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y > targetY)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+              // Find closest object in opposite direction that is not the snap target or selection
+              diff := round(Floor[sfloor].Obj[i].Pos_Y - targetY);
+              count := count + 1;
+              if diff > diffmin then
+                diffmin := diff;
+            end;
+         end;
+         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
+          Floor[sfloor].Obj[MoveSel].Pos_Y := targetY - (diffmin / count);
+      end
+      else if selectionY > targetY then
+      begin
+         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         begin
+          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
+            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y < targetY)
+            and (i <> target) and (i <> MoveSel) then
+            begin
+              diff := round(targetY - Floor[sfloor].Obj[i].Pos_Y);
+              count := count + 1;
+              if diff > diffmin then
+                diffmin := diff;
+            end;
+         end;
+         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
+          Floor[sfloor].Obj[MoveSel].Pos_Y := targetY + (diffmin / count);
+      end;
+    end;
+  end;
+end;
+
 procedure TForm1.CheckListBox1Click(Sender: TObject);
 var
   x: integer;
 begin
   if CheckListBox1.ItemIndex >= 0 then
   begin
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     Copylastmonster1.Enabled := false;
     Copylastitem1.Enabled := false;
     ListBox1.Clear;
@@ -2748,8 +2988,7 @@ begin
     Selected := ListBox1.ItemIndex;
     ListBox2.ItemIndex := -1;
     MoveSel := -1;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     stype := 1;
     Button2.Enabled := true;
     Button1.Enabled := true;
@@ -2822,8 +3061,7 @@ begin
   if ListBox2.ItemIndex >= 0 then
   begin
     Selected := ListBox2.ItemIndex;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     MoveSel := -1;
     Button2.Enabled := true;
     Button1.Enabled := true;
@@ -2913,6 +3151,24 @@ procedure TForm1.Description1Click(Sender: TObject);
 begin
   form3.UnicodeMemo1.Text := Info;
   form3.ShowModal;
+end;
+
+procedure TForm1.smDisableIndicatorClick(Sender: TObject);
+var
+  Reg: TRegistry;
+begin
+  smDisableIndicator.Checked := not smDisableIndicator.Checked;
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+  if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
+  begin
+    Reg.WriteBool('DisableIndicator', smDisableIndicator.Checked);
+    Reg.CloseKey;
+  end;
+  finally
+    Reg.Free;
+  end;
 end;
 
 procedure TForm1.DrawPCRELFile(filename: ansistring);
@@ -3437,8 +3693,7 @@ begin
     end;
 
     SetObjectDefaults();
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Floor[sfloor].ObjCount - 1;
     MoveType := 2;
     ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].Skin));
@@ -3473,8 +3728,7 @@ begin
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
 
     SetMonsterDefaults();
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Floor[sfloor].MonsterCount - 1;
     MoveType := 1;
     firstdrop := true;
@@ -3529,7 +3783,7 @@ var
   z, l: Integer;
   px, px2, py, py2: Double;
 begin
-  // End of mouse drag
+  // Start of mouse drag
   if (Button = mbleft) and (smDrag.checked) then
   begin
     imgclickstart := gettickcount();
@@ -3569,7 +3823,7 @@ begin
               vz := 0;
               myscreen.SetView(ppx, ppy, ppz, vr, vz);
             end;
-            if gettickcount() - lastimgclick > 1000 then
+            if gettickcount() - lastimgclick > 500 then
               l := -1;
             if l = ListBox1.ItemIndex then
               Form1.ListBox1DblClick(Form1)
@@ -3615,7 +3869,7 @@ begin
               vz := 0;
               myscreen.SetView(ppx, ppy, ppz, vr, vz);
             end;
-            if gettickcount() - lastimgclick > 1000 then
+            if gettickcount() - lastimgclick > 500 then
               l := -1;
             if l = ListBox2.ItemIndex then
               Form1.ListBox1DblClick(Form1)
@@ -3652,16 +3906,14 @@ end;
 
 procedure TForm1.Image2MouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; x, y: integer);
 begin
-  // Start of mouse drag
+  // End of mouse drag
   if (Button = mbleft) and (smDrag.Checked) and (mdrag = 1) and (gettickcount() - imgclickstart >= 300) then
   begin
     MoveSel := -1;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     if Selected > -1 then
     begin
-      lblStatus.Visible := true;
-      lblModifiers.Visible := true;
+      ShowIndicator();
       MoveSel := Selected;
       MoveType := stype;
       isedited := true;
@@ -4069,8 +4321,12 @@ begin
           autoaxis := Reg.ReadBool('AutoAxis');
         if Reg.ValueExists('SnapValue') then
           snapvalue := Reg.ReadInteger('SnapValue');
+        if Reg.ValueExists('DistanceLimit') then
+          distancelimit := Reg.ReadInteger('DistanceLimit');
         if Reg.ValueExists('SnapRotate') then
           snaprotate := Reg.ReadBool('SnapRotate');
+        if Reg.ValueExists('SnapDistance') then
+          snapdistance := Reg.ReadBool('SnapDistance');
         if Reg.ValueExists('OffsetX') then
           OffsetX := Reg.ReadFloat('OffsetX');
         if Reg.ValueExists('OffsetY') then
@@ -4085,6 +4341,10 @@ begin
           DefaultY := Reg.ReadFloat('DefaultY');
         if Reg.ValueExists('DefaultZ') then
           DefaultZ := Reg.ReadFloat('DefaultZ');
+        if Reg.ValueExists('DisableIndicator') then
+          disableindicator := Reg.ReadBool('DisableIndicator');
+        if Reg.ValueExists('Fullscreen3D') then
+          fullscreen := Reg.ReadBool('Fullscreen3D');
         Reg.CloseKey;
       end;
       Reg.Free;
@@ -4209,9 +4469,13 @@ begin
     smDrag.Checked := dragenabled;
     smSnap.Checked := snapenabled;
     Form7.chkAutoAxis.Checked := autoaxis;
-    FPlacementOptions.chkSnapRotate.Checked := snaprotate;
-
     FPlacementOptions.seSnapTolerance.Value := snapvalue;
+    FPlacementOptions.chkSnapRotate.Checked := snaprotate;
+    FplacementOptions.chkSnapDistance.Checked := snapdistance;
+    FPlacementOptions.seDistanceLimit.Enabled := snapdistance;
+    smDisableIndicator.Checked := disableindicator;
+    form17.chkFullscreen.Checked := fullscreen;
+    FPlacementOptions.seDistanceLimit.Value := distancelimit;
     FPlacementOptions.nbOffsetX.Value := OffsetX;
     FPlacementOptions.nbOffsetY.Value := OffsetY;
     FPlacementOptions.nbOffsetZ.Value := OffsetZ;
@@ -5210,8 +5474,7 @@ begin
   begin
     s := Selected;
     isedited := true;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     MoveSel := -1;
     SetUndow;
     if stype = 1 then
@@ -5353,8 +5616,7 @@ begin
     end;
 
     SetObjectDefaults();
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Floor[sfloor].ObjCount - 1;
     MoveType := 2;
     ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].Skin));
@@ -5438,8 +5700,7 @@ begin
     Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1].unknow3 := MapFloorId[Floor[sfloor].floorid];
 
     SetMonsterDefaults();
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Floor[sfloor].MonsterCount - 1;
     MoveType := 1;
     firstdrop := true;
@@ -5572,14 +5833,13 @@ end;
 
 procedure TForm1.Image2Click(Sender: TObject);
 var
-  x, d, pz, i, z, y, j, l: integer;
+  x, d, pz, i, z, y, j, l, diff, diffmin, closest: integer;
   px, py, px2, py2, di, pz2: double;
 begin
   if MoveSel > -1 then
   begin
     snapvalue := FPlacementOptions.seSnapTolerance.Value;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     // find the nearest zone
     // extract the real px, py
     SetUndow;
@@ -5599,8 +5859,7 @@ begin
         for x := 0 to sizeof(TMonster) - 1 do
           pansichar(@Floor[sfloor].Monster[Floor[sfloor].MonsterCount - 1])[x] :=
             pansichar(@Floor[sfloor].Monster[MoveSel])[x];
-        lblStatus.Visible := true;
-        lblModifiers.Visible := true;
+        ShowIndicator();
         MoveSel := Floor[sfloor].MonsterCount - 1;
       end;
       if MoveType = 2 then
@@ -5615,8 +5874,7 @@ begin
         Form1.ListBox2.Items.Strings[MoveSel]:='#'+inttostr(MoveSel)+' - ' + GetObjName(Floor[sfloor].Obj[MoveSel].skin); // Refresh object name
         for x := 0 to sizeof(TObj) - 1 do
           pansichar(@Floor[sfloor].Obj[Floor[sfloor].ObjCount - 1])[x] := pansichar(@Floor[sfloor].Obj[MoveSel])[x];
-        lblStatus.Visible := true;
-        lblModifiers.Visible := true;
+        ShowIndicator();
         MoveSel := Floor[sfloor].ObjCount - 1;
       end;
     end;
@@ -5674,6 +5932,9 @@ begin
     py := py * Zoom;
     // pz:=$0;
 
+    diffmin := High(integer);
+    closest := -1;
+
     if MoveType = 1 then
     begin
       Floor[sfloor].Monster[MoveSel].map_section := d;
@@ -5682,7 +5943,7 @@ begin
 
       if (smSnap.Checked) or (sdown) then // S key
       begin
-        // Vertical snap for monsters
+        // X axis snap for monsters
         for j := 0 to Floor[sfloor].MonsterCount - 1 do
         begin
           for i := 0 to snapvalue do
@@ -5698,12 +5959,25 @@ begin
                   // Match monster's rotations if enabled
                   if FPlacementOptions.chkSnapRotate.Checked then
                     Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
+                  // Save closest snap target
+                  diff := abs(round(Floor[sfloor].Monster[MoveSel].Pos_Y - Floor[sfloor].Monster[j].Pos_Y));
+                  if diff < diffmin then
+                  begin
+                    diffmin := diff;
+                    if j <> MoveSel then
+                      closest := j;
+                  end;
                 end;
               end;
           end;
         end;
+        if closest > -1 then
+          AdjustDistanceY(closest);
 
-        // Horizontal snap for monsters
+        diffmin := High(integer);
+        closest := -1;
+
+        // Z axis snap for monsters
         for j := 0 to Floor[sfloor].MonsterCount - 1 do
         begin
           for i := 0 to snapvalue do
@@ -5718,10 +5992,20 @@ begin
                   Floor[sfloor].Monster[MoveSel].Pos_Y := Floor[sfloor].Monster[j].Pos_Y;
                   if FPlacementOptions.chkSnapRotate.Checked then
                     Floor[sfloor].Monster[MoveSel].Direction := Floor[sfloor].Monster[j].Direction;
+                  // Save closest snap target
+                  diff := abs(round(Floor[sfloor].Monster[MoveSel].Pos_X - Floor[sfloor].Monster[j].Pos_X));
+                  if diff < diffmin then
+                  begin
+                    diffmin := diff;
+                    if j <> MoveSel then
+                      closest := j;
+                  end;
                 end;
               end;
           end;
         end;
+        if closest > -1 then
+          AdjustDistanceX(closest);
       end;
 
       // look around to find the best pz
@@ -5758,7 +6042,7 @@ begin
 
       if (smSnap.Checked) or (sdown) then // S key
       begin
-        // Vertical snap for objects
+        // X axis snap for objects
         for j := 0 to Floor[sfloor].ObjCount - 1 do
         begin
           for i := 0 to snapvalue do
@@ -5774,12 +6058,25 @@ begin
                   // Match object's rotations if enabled
                   if FPlacementOptions.chkSnapRotate.Checked then
                     Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
+                  // Save closest snap target
+                  diff := abs(round(Floor[sfloor].Obj[MoveSel].Pos_Y - Floor[sfloor].Obj[j].Pos_Y));
+                  if diff < diffmin then
+                  begin
+                    diffmin := diff;
+                    if j <> MoveSel then
+                      closest := j;
+                  end;
                 end;
               end;
           end;
         end;
+        if closest > -1 then
+          AdjustDistanceY(closest);
 
-        // Horizontal snap for objects
+        diffmin := High(integer);
+        closest := -1;
+
+        // Z axis snap for objects
         for j := 0 to Floor[sfloor].ObjCount - 1 do
         begin
           for i := 0 to snapvalue do
@@ -5794,10 +6091,20 @@ begin
                   Floor[sfloor].Obj[MoveSel].Pos_Y := Floor[sfloor].Obj[j].Pos_Y;
                   if FPlacementOptions.chkSnapRotate.Checked then
                     Floor[sfloor].Obj[MoveSel].unknow6 := Floor[sfloor].Obj[j].unknow6;
+                  // Save closest snap target
+                  diff := abs(round(Floor[sfloor].Obj[MoveSel].Pos_X - Floor[sfloor].Obj[j].Pos_X));
+                  if diff < diffmin then
+                  begin
+                    diffmin := diff;
+                    if j <> MoveSel then
+                      closest := j;
+                  end;
                 end;
               end;
           end;
         end;
+        if closest > -1 then
+          AdjustDistanceX(closest);
       end;
 
       if not altdw or firstdrop then
@@ -5829,8 +6136,7 @@ begin
       end;
       ListBox2Click(Form1);
     end;
-    lblStatus.Visible := false;
-    lblModifiers.Visible := false;
+    HideIndicator();
     MoveSel := -1;
     firstdrop := false;
     if ctrldw then
@@ -5838,8 +6144,7 @@ begin
       // Form1.CheckListBox1Click(form1);
       if MoveType = 1 then
       begin
-        lblStatus.Visible := true;
-        lblModifiers.Visible := true;
+        ShowIndicator();
         MoveSel := Floor[sfloor].MonsterCount - 1;
         ListBox1.Items.Add('#' + inttostr(MoveSel) + ' - ' + GenerateMonsterName(Floor[sfloor].Monster[Selected],
           Selected, 0));
@@ -5847,8 +6152,7 @@ begin
       end;
       if MoveType = 2 then
       begin
-        lblStatus.Visible := true;
-        lblModifiers.Visible := true;
+        ShowIndicator();
         MoveSel := Floor[sfloor].ObjCount - 1;
         ListBox2.Items.Add('#' + inttostr(MoveSel) + ' - ' + GetObjName(Floor[sfloor].Obj[Selected].Skin));
         Selected := MoveSel;
@@ -6254,13 +6558,11 @@ end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  lblStatus.Visible := false;
-  lblModifiers.Visible := false;
+  HideIndicator();
   MoveSel := -1;
   if Selected > -1 then
   begin
-    lblStatus.Visible := true;
-    lblModifiers.Visible := true;
+    ShowIndicator();
     MoveSel := Selected;
     MoveType := stype;
     isedited := true;
@@ -6967,25 +7269,59 @@ begin
   form14.Show;
   if myscreen = nil then
   begin
-    x := 320;
-    y := 240;
-    if form17.ComboBox1.ItemIndex = 1 then
+    if form17.chkFullscreen.Checked then
     begin
-      x := 640;
-      y := 480;
-    end;
-    if form17.ComboBox1.ItemIndex = 2 then
+      x := Screen.Width;
+      y := Screen.Height;
+      form13.ClientWidth := Screen.Width;
+      form13.ClientHeight := Screen.Height;
+      form13.BorderStyle := bsNone;
+      form13.Position := poDefault;
+    end
+    else
     begin
-      x := 800;
-      y := 600;
+      x := 320;
+      y := 240;
+      if form17.ComboBox1.ItemIndex = 1 then
+      begin
+        x := 640;
+        y := 480;
+      end;
+      if form17.ComboBox1.ItemIndex = 2 then
+      begin
+        x := 800;
+        y := 600;
+      end;
+      if form17.ComboBox1.ItemIndex = 3 then
+      begin
+        x := 1024;
+        y := 768;
+      end;
+      if form17.ComboBox1.ItemIndex = 4 then
+      begin
+        x := 1600;
+        y := 900;
+      end;
+      if form17.ComboBox1.ItemIndex = 5 then
+      begin
+        x := 1920;
+        y := 1080;
+      end;
+      if form17.ComboBox1.ItemIndex = 6 then
+      begin
+        x := 2560;
+        y := 1440;
+      end;
+      if form17.ComboBox1.ItemIndex = 7 then
+      begin
+        x := 3840;
+        y := 2160;
+      end;
+      form13.ClientWidth := x;
+      form13.ClientHeight := y;
+      form13.BorderStyle := bsSizeable;
+      form13.Position := poDefaultPosOnly;
     end;
-    if form17.ComboBox1.ItemIndex = 3 then
-    begin
-      x := 1024;
-      y := 768;
-    end;
-    form13.ClientWidth := x;
-    form13.ClientHeight := y;
 
     myscreen := TPikaEngine.Create(form13.Handle, x, y, form17.combobox2.ItemIndex);
     if myscreen.Enable then
@@ -7098,10 +7434,8 @@ begin
   FPlacementOptions.showmodal();
   // Update based on snap preferences
   snapvalue := FPlacementOptions.seSnapTolerance.Value;
-  if FPlacementOptions.chkSnapRotate.Checked then
-    snaprotate := true
-  else
-    snaprotate := false;
+  snaprotate := FPlacementOptions.chkSnapRotate.Checked;
+  snapdistance := FPlacementOptions.chkSnapDistance.Checked;
 end;
 
 procedure TForm1.smDeleteClick(Sender: TObject);
@@ -7441,9 +7775,27 @@ begin
     ShellExecute(0, 'open', 'https://qedit.info/', '', '', 0);
 end;
 
+procedure TForm1.Hidemainwindow1Click(Sender: TObject);
+begin
+   if (have3d) and (form13.BorderStyle = bsNone) and (not form13.Focused) then
+    Form1.WindowState := wsMinimized
+   else
+   begin
+    Form1.WindowState := wsNormal;
+    Form1.BringToFront;
+   end;
+end;
+
 procedure TForm1.Hotkeys1Click(Sender: TObject);
 begin
   fmHotkeys.ShowModal;
+end;
+
+procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if Button = mbRight then
+    PopupMenu3.Popup(mouse.CursorPos.x, mouse.CursorPos.y);
 end;
 
 procedure TForm1.FormMouseWheelDown(Sender: TObject; Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
@@ -8111,9 +8463,13 @@ end;
 
 procedure TForm1.Cancelplacement1Click(Sender: TObject);
 begin
-  MoveSel := -1;
-  lblStatus.Visible := false;
-  lblModifiers.Visible := false;
+  if (have3d) and (form13.Focused) and (form13.BorderStyle = bsNone) then
+    form13.close
+  else
+  begin
+    MoveSel := -1;
+    HideIndicator();
+  end;
 end;
 
 procedure TForm1.CheckBox1Click(Sender: TObject);

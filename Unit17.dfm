@@ -3,7 +3,7 @@ object Form17: TForm17
   Top = 196
   BorderStyle = bsDialog
   Caption = '3D Settings'
-  ClientHeight = 244
+  ClientHeight = 264
   ClientWidth = 180
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -46,7 +46,11 @@ object Form17: TForm17
       '320x240'
       '640x480'
       '800x600'
-      '1024x768')
+      '1024x768'
+      '1600x900'
+      '1920x1080'
+      '2560x1440'
+      '3840x2160')
   end
   object ComboBox2: TComboBox
     Left = 16
@@ -64,12 +68,12 @@ object Form17: TForm17
   end
   object Button1: TButton
     Left = 54
-    Top = 212
+    Top = 230
     Width = 75
     Height = 25
     Caption = 'Save'
     Default = True
-    TabOrder = 2
+    TabOrder = 6
     OnClick = Button1Click
   end
   object ComboBox4: TComboBox
@@ -78,7 +82,7 @@ object Form17: TForm17
     Width = 145
     Height = 21
     ItemIndex = 0
-    TabOrder = 3
+    TabOrder = 2
     Text = 'Close'
     Items.Strings = (
       'Close'
@@ -92,7 +96,7 @@ object Form17: TForm17
     Width = 145
     Height = 17
     Caption = 'Use anti-alising'
-    TabOrder = 4
+    TabOrder = 3
   end
   object CheckBox2: TCheckBox
     Left = 16
@@ -100,6 +104,14 @@ object Form17: TForm17
     Width = 147
     Height = 17
     Caption = 'Use Skydome'
+    TabOrder = 4
+  end
+  object chkFullscreen: TCheckBox
+    Left = 16
+    Top = 207
+    Width = 147
+    Height = 17
+    Caption = 'Fullscreen'
     TabOrder = 5
   end
 end

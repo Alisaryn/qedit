@@ -18,6 +18,7 @@ object Form1: TForm1
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnKeyUp = FormKeyUp
+  OnMouseUp = FormMouseUp
   OnMouseWheelDown = FormMouseWheelDown
   OnMouseWheelUp = FormMouseWheelUp
   OnResize = FormResize
@@ -669,6 +670,11 @@ object Form1: TForm1
         ShortCut = 27
         OnClick = Cancelplacement1Click
       end
+      object Hidemainwindow1: TMenuItem
+        Caption = 'Hide main window'
+        ShortCut = 77
+        OnClick = Hidemainwindow1Click
+      end
     end
   end
   object OpenDialog1: TOpenDialog
@@ -698,7 +704,7 @@ object Form1: TForm1
     Left = 300
     Top = 12
     Bitmap = {
-      494C0101140018000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010114001800040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000006000000001002000000000000060
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1610,6 +1616,16 @@ object Form1: TForm1
       Caption = 'undo'
       ShortCut = 16474
       OnExecute = Button11Click
+    end
+  end
+  object PopupMenu3: TPopupMenu
+    AutoPopup = False
+    MenuAnimation = [maLeftToRight]
+    Left = 396
+    Top = 10
+    object smDisableIndicator: TMenuItem
+      Caption = 'Disable placement indicator'
+      OnClick = smDisableIndicatorClick
     end
   end
 end
