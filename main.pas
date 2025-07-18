@@ -2691,103 +2691,137 @@ end;
 
 procedure AdjustDistanceX(target: integer);
 var
-  i,diff,diffmin,count: integer;
-  selectionX,targetX: single;
+  i,j,count: integer;
+  selectionX,targetX,diff,diffavg: single;
 begin
   if FPlacementOptions.chkSnapDistance.Checked then
   begin
     distancelimit := FPlacementOptions.seDistanceLimit.Value;
     if distancelimit = 0 then distancelimit := High(integer);
 
-    if have3d and form13.Focused then
-      MoveSel := Selected;
-
-    diffmin := 0;
+    diffavg := 0;
     count := 0;
+    j := -1;
 
+    showmessage(inttostr(target));
     if sType = 1 then
     begin
-      selectionX := Floor[sfloor].Monster[MoveSel].Pos_X;
+      selectionX := Floor[sfloor].Monster[moveSel].Pos_X;
       targetX := Floor[sfloor].Monster[target].Pos_X;
       if selectionX < targetX then
       begin
          for i := 0 to Floor[sfloor].MonsterCount - 1 do
          begin
-          // Make sure the monster is visible and of the same section
-          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+          // Make sure both are visible and of the same section
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[moveSel].map_section) and
             ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X > targetX)
-            and (i <> target) and (i <> MoveSel) then
+            and (round(Floor[sfloor].Monster[i].Pos_Y) = round(Floor[sfloor].Monster[target].Pos_Y))
+            and (i <> target) and (i <> moveSel) then
             begin
-              // Find closest monster in opposite direction that is not the snap target or selection
-              diff := round(Floor[sfloor].Monster[i].Pos_X - targetX);
+              // Find difference of any others found on the axis
               count := count + 1;
-              if diff > diffmin then
-                diffmin := diff;
+              if j = -1 then
+                diff := abs(targetX - Floor[sfloor].Monster[i].Pos_X)
+              else
+                diff := abs(Floor[sfloor].Monster[i].Pos_X - Floor[sfloor].Monster[j].Pos_X);
+              showmessage(floattostr(diff));
+              diffavg := diffavg + diff;
+              j := i;
             end;
          end;
-         // Check count <> 0 condition first (left to right) to avoid divide by zero errors
-         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
-          Floor[sfloor].Monster[MoveSel].Pos_X := targetX - (diffmin / count);
+         // Find average distance
+         if count > 1 then
+          diffavg := (diffavg / count) / 1.5;
+         // Offset the selection
+         if (diffavg <> 0) and (diffavg <= distancelimit) then
+          Floor[sfloor].Monster[moveSel].Pos_X := targetX - diffavg;
       end
       else if selectionX > targetX then
       begin
          for i := 0 to Floor[sfloor].MonsterCount - 1 do
          begin
-          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+          // Make sure both are visible and of the same section
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[selected].map_section) and
             ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X < targetX)
-            and (i <> target) and (i <> MoveSel) then
+            and (trunc(Floor[sfloor].Monster[i].Pos_Y) = trunc(Floor[sfloor].Monster[target].Pos_Y))
+            and (i <> target) and (i <> selected) then
             begin
-              diff := round(targetX - Floor[sfloor].Monster[i].Pos_X);
+              // Find difference of any others found on the axis
+              if j = -1 then
+                diff := abs(Floor[sfloor].Monster[i].Pos_X - targetX)
+              else
+                diff := abs(Floor[sfloor].Monster[i].Pos_X - Floor[sfloor].Monster[j].Pos_X);
               count := count + 1;
-              if diff > diffmin then
-                diffmin := diff;
+              diffavg := diffavg + diff;
+              j := i;
             end;
          end;
-         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
-          Floor[sfloor].Monster[MoveSel].Pos_X := targetX + (diffmin / count);
+         // Find average distance
+         if count <> 0 then
+          diffavg := diffavg / count;
+         // Offset the selection
+         if (diffavg <> 0) and (count <> 0) and (diffavg <= distancelimit) then
+          Floor[sfloor].Monster[selected].Pos_X := targetX + diffavg;
       end;
     end;
 
     if sType = 2 then
     begin
-      selectionX := Floor[sfloor].Obj[MoveSel].Pos_X;
-      targetX := Floor[sfloor].Obj[target].Pos_X;
-
+      selectionX := Floor[sfloor].obj[selected].Pos_X;
+      targetX := Floor[sfloor].obj[target].Pos_X;
       if selectionX < targetX then
       begin
-         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         for i := 0 to Floor[sfloor].objCount - 1 do
          begin
-          // Make sure the object is visible and of the same section
-          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
-            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X > targetX)
-            and (i <> target) and (i <> MoveSel) then
-          begin
-            // Find closest object in opposite direction that is not the snap target or selection
-            diff := round(Floor[sfloor].Obj[i].Pos_X - targetX);
-            count := count + 1;
-              if diff > diffmin then
-                diffmin := diff;
-          end;
+          // Make sure both are visible and of the same section
+          if (Floor[sfloor].obj[i].map_section = Floor[sfloor].obj[selected].map_section) and
+            ((Floor[sfloor].obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].obj[i].Pos_X > targetX)
+            and (trunc(Floor[sfloor].obj[i].Pos_Y) = trunc(Floor[sfloor].obj[target].Pos_Y))
+            and (i <> target) and (i <> selected) then
+            begin
+              // Find difference of any others found on the axis
+              if j = -1 then
+                diff := abs(Floor[sfloor].obj[i].Pos_X - targetX)
+              else
+                diff := abs(Floor[sfloor].obj[i].Pos_X - Floor[sfloor].obj[j].Pos_X);
+              count := count + 1;
+              diffavg := diffavg + diff;
+              j := i;
+            end;
          end;
-         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
-          Floor[sfloor].Obj[MoveSel].Pos_X := targetX - (diffmin / count);
+         // Find average distance
+         if count <> 0 then
+          diffavg := diffavg / count;
+         // Offset the selection
+         if (diffavg <> 0) and (count <> 0) and (diffavg <= distancelimit) then
+          Floor[sfloor].obj[selected].Pos_X := targetX - diffavg;
       end
       else if selectionX > targetX then
       begin
-         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         for i := 0 to Floor[sfloor].objCount - 1 do
          begin
-          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
-            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X < targetX)
-            and (i <> target) and (i <> MoveSel) then
+          // Make sure both are visible and of the same section
+          if (Floor[sfloor].obj[i].map_section = Floor[sfloor].obj[selected].map_section) and
+            ((Floor[sfloor].obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].obj[i].Pos_X < targetX)
+            and (trunc(Floor[sfloor].obj[i].Pos_Y) = trunc(Floor[sfloor].obj[target].Pos_Y))
+            and (i <> target) and (i <> selected) then
             begin
-              diff := round(targetX - Floor[sfloor].Obj[i].Pos_X);
+              // Find difference of any others found on the axis
+              if j = -1 then
+                diff := abs(Floor[sfloor].obj[i].Pos_X - targetX)
+              else
+                diff := abs(Floor[sfloor].obj[i].Pos_X - Floor[sfloor].obj[j].Pos_X);
               count := count + 1;
-              if diff > diffmin then
-                diffmin := diff;
+              diffavg := diffavg + diff;
+              j := i;
             end;
          end;
-         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
-          Floor[sfloor].Obj[MoveSel].Pos_X := targetX + (diffmin / count);
+         // Find average distance
+         if count <> 0 then
+          diffavg := diffavg / count;
+         // Offset the selection
+         if (diffavg <> 0) and (count <> 0) and (diffavg <= distancelimit) then
+          Floor[sfloor].obj[selected].Pos_X := targetX + diffavg;
       end;
     end;
   end;
@@ -2795,103 +2829,135 @@ end;
 
 procedure AdjustDistanceY(target: integer);
 var
-  i,diff,diffmin,count: integer;
-  selectionY,targetY: single;
+  i,j,count: integer;
+  selectionY,targetY,diff,diffavg: double;
 begin
   if FPlacementOptions.chkSnapDistance.Checked then
   begin
     distancelimit := FPlacementOptions.seDistanceLimit.Value;
     if distancelimit = 0 then distancelimit := High(integer);
 
-    if have3d and form13.Focused then
-      MoveSel := Selected;
-
-    diffmin := 0;
+    diffavg := 0;
     count := 0;
+    j := -1;
 
     if sType = 1 then
     begin
-      selectionY := Floor[sfloor].Monster[MoveSel].Pos_Y;
+      selectionY := Floor[sfloor].Monster[selected].Pos_Y;
       targetY := Floor[sfloor].Monster[target].Pos_Y;
-
       if selectionY < targetY then
       begin
          for i := 0 to Floor[sfloor].MonsterCount - 1 do
          begin
-          // Make sure the monster is visible and of the same section
-          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+          // Make sure both are visible and of the same section
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[selected].map_section) and
             ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y > targetY)
-            and (i <> target) and (i <> MoveSel) then
+            and (trunc(Floor[sfloor].Monster[i].Pos_X) = trunc(Floor[sfloor].Monster[target].Pos_X))
+            and (i <> target) and (i <> selected) then
             begin
-              // Find closest monster in opposite direction that is not the snap target or selection
-              diff := round(Floor[sfloor].Monster[i].Pos_Y - targetY);
+              // Find difference of any others found on the axis
+              if j = -1 then
+                diff := abs(Floor[sfloor].Monster[i].Pos_Y - targetY)
+              else
+                diff := abs(Floor[sfloor].Monster[i].Pos_Y - Floor[sfloor].Monster[j].Pos_Y);
               count := count + 1;
-              if diff > diffmin then
-                diffmin := diff;
+              diffavg := diffavg + diff;
+              j := i;
             end;
          end;
-         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
-           Floor[sfloor].Monster[MoveSel].Pos_Y := targetY - (diffmin / count);
+         // Find average distance
+         if count <> 0 then
+          diffavg := diffavg / count;
+         // Offset the selection
+         if (diffavg <> 0) and (count <> 0) and (diffavg <= distancelimit) then
+          Floor[sfloor].Monster[selected].Pos_Y := targetY - diffavg;
       end
       else if selectionY > targetY then
       begin
          for i := 0 to Floor[sfloor].MonsterCount - 1 do
          begin
-          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[MoveSel].map_section) and
+          // Make sure both are visible and of the same section
+          if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[selected].map_section) and
             ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y < targetY)
-            and (i <> target) and (i <> MoveSel) then
+            and (trunc(Floor[sfloor].Monster[i].Pos_X) = trunc(Floor[sfloor].Monster[target].Pos_X))
+            and (i <> target) and (i <> selected) then
             begin
-              diff := round(targetY - Floor[sfloor].Monster[i].Pos_Y);
+              // Find difference of any others found on the axis
+              if j = -1 then
+                diff := abs(Floor[sfloor].Monster[i].Pos_Y - targetY)
+              else
+                diff := abs(Floor[sfloor].Monster[i].Pos_Y - Floor[sfloor].Monster[j].Pos_Y);
               count := count + 1;
-              if diff > diffmin then
-                diffmin := diff;
+              diffavg := diffavg + diff;
+              j := i;
             end;
          end;
-         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
-           Floor[sfloor].Monster[MoveSel].Pos_Y := targetY + (diffmin / count);
+         // Find average distance
+         if count <> 0 then
+          diffavg := diffavg / count;
+         // Offset the selection
+         if (diffavg <> 0) and (count <> 0) and (diffavg <= distancelimit) then
+          Floor[sfloor].Monster[selected].Pos_Y := targetY + diffavg;
       end;
     end;
 
     if sType = 2 then
     begin
-      selectionY := Floor[sfloor].Obj[MoveSel].Pos_Y;
-      targetY := Floor[sfloor].Obj[target].Pos_Y;
-
+      selectionY := Floor[sfloor].obj[selected].Pos_Y;
+      targetY := Floor[sfloor].obj[target].Pos_Y;
       if selectionY < targetY then
       begin
-         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         for i := 0 to Floor[sfloor].objCount - 1 do
          begin
-          // Make sure the object is visible and of the same section
-          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
-            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y > targetY)
-            and (i <> target) and (i <> MoveSel) then
+          // Make sure both are visible and of the same section
+          if (Floor[sfloor].obj[i].map_section = Floor[sfloor].obj[selected].map_section) and
+            ((Floor[sfloor].obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].obj[i].Pos_Y > targetY)
+            and (trunc(Floor[sfloor].obj[i].Pos_X) = trunc(Floor[sfloor].obj[target].Pos_X))
+            and (i <> target) and (i <> selected) then
             begin
-              // Find closest object in opposite direction that is not the snap target or selection
-              diff := round(Floor[sfloor].Obj[i].Pos_Y - targetY);
+              // Find difference of any others found on the axis
+              if j = -1 then
+                diff := abs(Floor[sfloor].obj[i].Pos_Y - targetY)
+              else
+                diff := abs(Floor[sfloor].obj[i].Pos_Y - Floor[sfloor].obj[j].Pos_Y);
               count := count + 1;
-              if diff > diffmin then
-                diffmin := diff;
+              diffavg := diffavg + diff;
+              j := i;
             end;
          end;
-         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
-          Floor[sfloor].Obj[MoveSel].Pos_Y := targetY - (diffmin / count);
+         // Find average distance
+         if count <> 0 then
+          diffavg := diffavg / count;
+         // Offset the selection
+         if (diffavg <> 0) and (count <> 0) and (diffavg <= distancelimit) then
+          Floor[sfloor].obj[selected].Pos_Y := targetY - diffavg;
       end
       else if selectionY > targetY then
       begin
-         for i := 0 to Floor[sfloor].ObjCount - 1 do
+         for i := 0 to Floor[sfloor].objCount - 1 do
          begin
-          if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[MoveSel].map_section) and
-            ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y < targetY)
-            and (i <> target) and (i <> MoveSel) then
+          // Make sure both are visible and of the same section
+          if (Floor[sfloor].obj[i].map_section = Floor[sfloor].obj[selected].map_section) and
+            ((Floor[sfloor].obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].obj[i].Pos_Y < targetY)
+            and (trunc(Floor[sfloor].obj[i].Pos_X) = trunc(Floor[sfloor].obj[target].Pos_X))
+            and (i <> target) and (i <> selected) then
             begin
-              diff := round(targetY - Floor[sfloor].Obj[i].Pos_Y);
+              // Find difference of any others found on the axis
+              if j = -1 then
+                diff := abs(Floor[sfloor].obj[i].Pos_Y - targetY)
+              else
+                diff := abs(Floor[sfloor].obj[i].Pos_Y - Floor[sfloor].obj[j].Pos_Y);
               count := count + 1;
-              if diff > diffmin then
-                diffmin := diff;
+              diffavg := diffavg + diff;
+              j := i;
             end;
          end;
-         if (diffmin <> 0) and (count <> 0) and ((diffmin / count) <= distancelimit) then
-          Floor[sfloor].Obj[MoveSel].Pos_Y := targetY + (diffmin / count);
+         // Find average distance
+         if count <> 0 then
+          diffavg := diffavg / count;
+         // Offset the selection
+         if (diffavg <> 0) and (count <> 0) and (diffavg <= distancelimit) then
+          Floor[sfloor].obj[selected].Pos_Y := targetY + diffavg;
       end;
     end;
   end;
@@ -3668,7 +3734,8 @@ end;
 
 procedure TForm1.Copyitem1Click(Sender: TObject);
 begin
-  Copylastitem1Click(nil);
+  if Copylastitem1.Enabled then
+    Copylastitem1Click(nil);
 end;
 
 procedure TForm1.Copylastitem1Click(Sender: TObject);
@@ -3746,7 +3813,8 @@ end;
 
 procedure TForm1.Copymonster1Click(Sender: TObject);
 begin
-  Copylastmonster1Click(nil);
+  if Copylastmonster1.Enabled then
+    Copylastmonster1Click(nil);
 end;
 
 procedure TForm1.ViewScrypt1Click(Sender: TObject);
@@ -4471,8 +4539,9 @@ begin
     Form7.chkAutoAxis.Checked := autoaxis;
     FPlacementOptions.seSnapTolerance.Value := snapvalue;
     FPlacementOptions.chkSnapRotate.Checked := snaprotate;
-    FplacementOptions.chkSnapDistance.Checked := snapdistance;
-    FPlacementOptions.seDistanceLimit.Enabled := snapdistance;
+    //FplacementOptions.chkSnapDistance.Checked := snapdistance;
+    //FPlacementOptions.seDistanceLimit.Enabled := snapdistance;
+    FPlacementOptions.chkSnapDistance.Enabled := false;
     smDisableIndicator.Checked := disableindicator;
     form17.chkFullscreen.Checked := fullscreen;
     FPlacementOptions.seDistanceLimit.Value := distancelimit;

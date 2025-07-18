@@ -357,11 +357,11 @@ begin
                         if (FPlacementOptions.chkSnapRotate.Checked) then
                           floor[sfloor].Monster[selected].Direction := floor[sfloor].Monster[j].Direction;
                         // Save closest snap target
-                        diff := abs(round(Floor[sfloor].Monster[MoveSel].Pos_Y - Floor[sfloor].Monster[j].Pos_Y));
+                        diff := abs(round(Floor[sfloor].Monster[selected].Pos_Y - Floor[sfloor].Monster[j].Pos_Y));
                         if diff < diffmin then
                         begin
                           diffmin := diff;
-                          if j <> MoveSel then
+                          if j <> selected then
                             closest := j;
                         end;
                       end;
@@ -389,11 +389,11 @@ begin
                         if (FPlacementOptions.chkSnapRotate.Checked) then
                           floor[sfloor].Monster[selected].Direction := floor[sfloor].Monster[j].Direction;
                         // Save closest snap target
-                        diff := abs(round(Floor[sfloor].Monster[MoveSel].Pos_X - Floor[sfloor].Monster[j].Pos_X));
+                        diff := abs(round(Floor[sfloor].Monster[selected].Pos_X - Floor[sfloor].Monster[j].Pos_X));
                         if diff < diffmin then
                         begin
                           diffmin := diff;
-                          if j <> MoveSel then
+                          if j <> selected then
                             closest := j;
                         end;
                       end;
@@ -440,11 +440,11 @@ begin
                         if (FPlacementOptions.chkSnapRotate.Checked) then
                           floor[sfloor].Obj[selected].unknow6 := floor[sfloor].Obj[j].unknow6;
                         // Save closest snap target
-                        diff := abs(round(Floor[sfloor].Obj[MoveSel].Pos_Y - Floor[sfloor].Obj[j].Pos_Y));
+                        diff := abs(round(Floor[sfloor].Obj[selected].Pos_Y - Floor[sfloor].Obj[j].Pos_Y));
                         if diff < diffmin then
                         begin
                           diffmin := diff;
-                          if j <> MoveSel then
+                          if j <> selected then
                             closest := j;
                         end;
                       end;
@@ -474,11 +474,11 @@ begin
                         if (FPlacementOptions.chkSnapRotate.Checked) then
                           floor[sfloor].Obj[selected].unknow6 := floor[sfloor].Obj[j].unknow6;
                         // Save closest snap target
-                        diff := abs(round(Floor[sfloor].Obj[MoveSel].Pos_X - Floor[sfloor].Obj[j].Pos_X));
+                        diff := abs(round(Floor[sfloor].Obj[selected].Pos_X - Floor[sfloor].Obj[j].Pos_X));
                         if diff < diffmin then
                         begin
                           diffmin := diff;
-                          if j <> MoveSel then
+                          if j <> selected then
                             closest := j;
                         end;
                       end;
