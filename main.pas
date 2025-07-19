@@ -2983,6 +2983,8 @@ begin
               ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Z > targetZ)
               and (round(Floor[sfloor].Monster[i].Pos_X) = round(Floor[sfloor].Monster[target].Pos_X))
               and (round(Floor[sfloor].Monster[i].Pos_Y) = round(Floor[sfloor].Monster[target].Pos_Y))
+              and (round(Floor[sfloor].Monster[selected].Pos_X) = round(Floor[sfloor].Monster[target].Pos_X))
+              and (round(Floor[sfloor].Monster[selected].Pos_Y) = round(Floor[sfloor].Monster[target].Pos_Y))
               and (i <> target) and (i <> selected) then
               begin
                 diff := abs(targetZ - Floor[sfloor].Monster[i].Pos_Z);
@@ -3009,6 +3011,8 @@ begin
               ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Z < targetZ)
               and (round(Floor[sfloor].Monster[i].Pos_X) = round(Floor[sfloor].Monster[target].Pos_X))
               and (round(Floor[sfloor].Monster[i].Pos_Y) = round(Floor[sfloor].Monster[target].Pos_Y))
+              and (round(Floor[sfloor].Monster[selected].Pos_X) = round(Floor[sfloor].Monster[target].Pos_X))
+              and (round(Floor[sfloor].Monster[selected].Pos_Y) = round(Floor[sfloor].Monster[target].Pos_Y))
               and (i <> target) and (i <> selected) then
               begin
                 diff := abs(targetZ - Floor[sfloor].Monster[i].Pos_Z);
@@ -3042,6 +3046,8 @@ begin
               ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Z > targetZ)
               and (round(Floor[sfloor].Obj[i].Pos_X) = round(Floor[sfloor].Obj[target].Pos_X))
               and (round(Floor[sfloor].Obj[i].Pos_Y) = round(Floor[sfloor].Obj[target].Pos_Y))
+              and (round(Floor[sfloor].Obj[selected].Pos_X) = round(Floor[sfloor].Obj[target].Pos_X))
+              and (round(Floor[sfloor].Obj[selected].Pos_Y) = round(Floor[sfloor].Obj[target].Pos_Y))
               and (i <> target) and (i <> selected) then
               begin
                 diff := abs(targetZ - Floor[sfloor].Obj[i].Pos_Z);
@@ -3068,6 +3074,8 @@ begin
               ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Z < targetZ)
               and (round(Floor[sfloor].Obj[i].Pos_X) = round(Floor[sfloor].Obj[target].Pos_X))
               and (round(Floor[sfloor].Obj[i].Pos_Y) = round(Floor[sfloor].Obj[target].Pos_Y))
+              and (round(Floor[sfloor].Obj[selected].Pos_X) = round(Floor[sfloor].Obj[target].Pos_X))
+              and (round(Floor[sfloor].Obj[selected].Pos_Y) = round(Floor[sfloor].Obj[target].Pos_Y))
               and (i <> target) and (i <> selected) then
               begin
                 diff := abs(targetZ - Floor[sfloor].Obj[i].Pos_Z);

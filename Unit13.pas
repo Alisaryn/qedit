@@ -415,7 +415,8 @@ begin
               if closest > -1 then
               begin
                 AdjustDistanceX(closest);
-                AdjustDistanceZ(closest);
+                // Disable Z (Y) axis snap distance for now
+                // AdjustDistanceZ(closest);
               end;
               GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
             end;
@@ -511,7 +512,8 @@ begin
               if closest > -1 then
               begin
                 AdjustDistanceX(closest);
-                AdjustDistanceZ(closest);
+                // Disable Z (Y) axis snap distance for now
+                // AdjustDistanceZ(closest);
               end;
               myobj[selected].Free;
               Generateobj(floor[sfloor].obj[selected],selected);
