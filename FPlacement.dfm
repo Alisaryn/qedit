@@ -3,7 +3,7 @@ object FPlacementOptions: TFPlacementOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Placement Options'
-  ClientHeight = 450
+  ClientHeight = 445
   ClientWidth = 217
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
@@ -207,7 +207,7 @@ object FPlacementOptions: TFPlacementOptions
     Value = 0
   end
   object chkDistancelimit: TCheckBox
-    Left = 28
+    Left = 29
     Top = 346
     Width = 111
     Height = 17
