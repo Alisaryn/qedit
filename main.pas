@@ -464,8 +464,6 @@ procedure ShowIndicator();
 procedure HideIndicator();
 procedure AdjustDistanceX(target: integer);
 procedure AdjustDistanceY(target: integer);
-procedure AdjustDistanceX3D(target: integer);
-procedure AdjustDistanceY3D(target: integer);
 
 var
   Form1: TForm1;
@@ -2694,7 +2692,7 @@ end;
 
 procedure AdjustDistanceX(target: integer);
 var
-  i,closest: integer;
+  i,closest,selectionidx: integer;
   selectionX,targetX: single;
   diff,diffmin: double;
 begin
@@ -2704,9 +2702,14 @@ begin
     diffmin := Double.MaxValue;
     closest := -1;
 
+    if have3d and form13.Focused then
+      selectionidx := selected
+    else
+      selectionidx := MoveSel;
+
     if sType = 1 then
     begin
-      selectionX := Floor[sfloor].Monster[MoveSel].Pos_X;
+      selectionX := Floor[sfloor].Monster[selectionidx].Pos_X;
       targetX := Floor[sfloor].Monster[target].Pos_X;
 
       if selectionX < targetX then
@@ -2717,7 +2720,7 @@ begin
             if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[target].map_section) and
               ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X > targetX)
               and (round(Floor[sfloor].Monster[i].Pos_Y) = round(Floor[sfloor].Monster[target].Pos_Y))
-              and (i <> target) and (i <> MoveSel) then
+              and (i <> target) and (i <> selectionidx) then
               begin
                 diff := abs(targetX - Floor[sfloor].Monster[i].Pos_X);
                 if diff < diffmin then
@@ -2732,7 +2735,7 @@ begin
             diff := abs(targetX - Floor[sfloor].Monster[closest].Pos_X);
          // Offset the selection by the difference
          if diff <> 0 then
-          Floor[sfloor].Monster[MoveSel].Pos_X := targetX - diff;
+          Floor[sfloor].Monster[selectionidx].Pos_X := targetX - diff;
       end
       else if selectionX > targetX then
       begin
@@ -2742,7 +2745,7 @@ begin
             if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[target].map_section) and
               ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X < targetX)
               and (round(Floor[sfloor].Monster[i].Pos_Y) = round(Floor[sfloor].Monster[target].Pos_Y))
-              and (i <> target) and (i <> MoveSel) then
+              and (i <> target) and (i <> selectionidx) then
               begin
                 diff := abs(targetX - Floor[sfloor].Monster[i].Pos_X);
                 if diff < diffmin then
@@ -2757,13 +2760,13 @@ begin
             diff := abs(targetX - Floor[sfloor].Monster[closest].Pos_X);
          // Offset the selection by the difference
          if diff <> 0 then
-          Floor[sfloor].Monster[MoveSel].Pos_X := targetX + diff;
+          Floor[sfloor].Monster[selectionidx].Pos_X := targetX + diff;
       end
     end;
 
     if sType = 2 then
     begin
-      selectionX := Floor[sfloor].obj[MoveSel].Pos_X;
+      selectionX := Floor[sfloor].obj[selectionidx].Pos_X;
       targetX := Floor[sfloor].obj[target].Pos_X;
 
       if selectionX < targetX then
@@ -2774,7 +2777,7 @@ begin
             if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[target].map_section) and
               ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X > targetX)
               and (round(Floor[sfloor].Obj[i].Pos_Y) = round(Floor[sfloor].Obj[target].Pos_Y))
-              and (i <> target) and (i <> MoveSel) then
+              and (i <> target) and (i <> selectionidx) then
               begin
                 diff := abs(targetX - Floor[sfloor].Obj[i].Pos_X);
                 if diff < diffmin then
@@ -2789,7 +2792,7 @@ begin
             diff := abs(targetX - Floor[sfloor].Obj[closest].Pos_X);
          // Offset the selection by the difference
          if diff <> 0 then
-          Floor[sfloor].Obj[MoveSel].Pos_X := targetX - diff;
+          Floor[sfloor].Obj[selectionidx].Pos_X := targetX - diff;
       end
       else if selectionX > targetX then
       begin
@@ -2799,7 +2802,7 @@ begin
             if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[target].map_section) and
               ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X < targetX)
               and (round(Floor[sfloor].Obj[i].Pos_Y) = round(Floor[sfloor].Obj[target].Pos_Y))
-              and (i <> target) and (i <> MoveSel) then
+              and (i <> target) and (i <> selectionidx) then
               begin
                 diff := abs(targetX - Floor[sfloor].Obj[i].Pos_X);
                 if diff < diffmin then
@@ -2814,7 +2817,7 @@ begin
             diff := abs(targetX - Floor[sfloor].Obj[closest].Pos_X);
          // Offset the selection by the difference
          if diff <> 0 then
-          Floor[sfloor].Obj[MoveSel].Pos_X := targetX + diff;
+          Floor[sfloor].Obj[selectionidx].Pos_X := targetX + diff;
       end
     end;
   end;
@@ -2822,7 +2825,7 @@ end;
 
 procedure AdjustDistanceY(target: integer);
 var
-  i,closest: integer;
+  i,closest,selectionidx: integer;
   selectionX,targetX: single;
   diff,diffmin: double;
 begin
@@ -2832,9 +2835,14 @@ begin
     diffmin := Double.MaxValue;
     closest := -1;
 
+    if have3d and form13.Focused then
+      selectionidx := selected
+    else
+      selectionidx := MoveSel;
+
     if sType = 1 then
     begin
-      selectionX := Floor[sfloor].Monster[MoveSel].Pos_Y;
+      selectionX := Floor[sfloor].Monster[selectionidx].Pos_Y;
       targetX := Floor[sfloor].Monster[target].Pos_Y;
 
       if selectionX < targetX then
@@ -2845,7 +2853,7 @@ begin
             if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[target].map_section) and
               ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y > targetX)
               and (round(Floor[sfloor].Monster[i].Pos_X) = round(Floor[sfloor].Monster[target].Pos_X))
-              and (i <> target) and (i <> MoveSel) then
+              and (i <> target) and (i <> selectionidx) then
               begin
                 diff := abs(targetX - Floor[sfloor].Monster[i].Pos_Y);
                 if diff < diffmin then
@@ -2860,7 +2868,7 @@ begin
             diff := abs(targetX - Floor[sfloor].Monster[closest].Pos_Y);
          // Offset the selection by the difference
          if diff <> 0 then
-          Floor[sfloor].Monster[MoveSel].Pos_Y := targetX - diff;
+          Floor[sfloor].Monster[selectionidx].Pos_Y := targetX - diff;
       end
       else if selectionX > targetX then
       begin
@@ -2870,7 +2878,7 @@ begin
             if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[target].map_section) and
               ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y < targetX)
               and (round(Floor[sfloor].Monster[i].Pos_X) = round(Floor[sfloor].Monster[target].Pos_X))
-              and (i <> target) and (i <> MoveSel) then
+              and (i <> target) and (i <> selectionidx) then
               begin
                 diff := abs(targetX - Floor[sfloor].Monster[i].Pos_Y);
                 if diff < diffmin then
@@ -2885,13 +2893,13 @@ begin
             diff := abs(targetX - Floor[sfloor].Monster[closest].Pos_Y);
          // Offset the selection by the difference
          if diff <> 0 then
-          Floor[sfloor].Monster[MoveSel].Pos_Y := targetX + diff;
+          Floor[sfloor].Monster[selectionidx].Pos_Y := targetX + diff;
       end
     end;
 
     if sType = 2 then
     begin
-      selectionX := Floor[sfloor].obj[MoveSel].Pos_Y;
+      selectionX := Floor[sfloor].obj[selectionidx].Pos_Y;
       targetX := Floor[sfloor].obj[target].Pos_Y;
 
       if selectionX < targetX then
@@ -2902,7 +2910,7 @@ begin
             if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[target].map_section) and
               ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y > targetX)
               and (round(Floor[sfloor].Obj[i].Pos_X) = round(Floor[sfloor].Obj[target].Pos_X))
-              and (i <> target) and (i <> MoveSel) then
+              and (i <> target) and (i <> selectionidx) then
               begin
                 diff := abs(targetX - Floor[sfloor].Obj[i].Pos_Y);
                 if diff < diffmin then
@@ -2917,7 +2925,7 @@ begin
             diff := abs(targetX - Floor[sfloor].Obj[closest].Pos_Y);
          // Offset the selection by the difference
          if diff <> 0 then
-          Floor[sfloor].Obj[MoveSel].Pos_Y := targetX - diff;
+          Floor[sfloor].Obj[selectionidx].Pos_Y := targetX - diff;
       end
       else if selectionX > targetX then
       begin
@@ -2927,7 +2935,7 @@ begin
             if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[target].map_section) and
               ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y < targetX)
               and (round(Floor[sfloor].Obj[i].Pos_X) = round(Floor[sfloor].Obj[target].Pos_X))
-              and (i <> target) and (i <> MoveSel) then
+              and (i <> target) and (i <> selectionidx) then
               begin
                 diff := abs(targetX - Floor[sfloor].Obj[i].Pos_Y);
                 if diff < diffmin then
@@ -2942,263 +2950,7 @@ begin
             diff := abs(targetX - Floor[sfloor].Obj[closest].Pos_Y);
          // Offset the selection by the difference
          if diff <> 0 then
-          Floor[sfloor].Obj[MoveSel].Pos_Y := targetX + diff;
-      end
-    end;
-  end;
-end;
-
-procedure AdjustDistanceX3D(target: integer);
-var
-  i,closest: integer;
-  selectionX,targetX: single;
-  diff,diffmin: double;
-begin
-  if FPlacementOptions.chkSnapDistance.Checked then
-  begin
-    diff := 0;
-    diffmin := Double.MaxValue;
-    closest := -1;
-
-    if sType = 1 then
-    begin
-      selectionX := Floor[sfloor].Monster[selected].Pos_X;
-      targetX := Floor[sfloor].Monster[target].Pos_X;
-
-      if selectionX < targetX then
-      begin
-          // First find the next closest from the target in the opposite direction
-          for i := 0 to Floor[sfloor].MonsterCount - 1 do
-          begin
-            if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[target].map_section) and
-              ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X > targetX)
-              and (round(Floor[sfloor].Monster[i].Pos_Y) = round(Floor[sfloor].Monster[target].Pos_Y))
-              and (i <> target) and (i <> selected) then
-              begin
-                diff := abs(targetX - Floor[sfloor].Monster[i].Pos_X);
-                if diff < diffmin then
-                begin
-                  diffmin := diff;
-                  closest := i;
-                end;
-              end;
-          end;
-          // Find the difference
-          if closest <> -1 then
-            diff := abs(targetX - Floor[sfloor].Monster[closest].Pos_X);
-         // Offset the selection by the difference
-         if diff <> 0 then
-          Floor[sfloor].Monster[selected].Pos_X := targetX - diff;
-      end
-      else if selectionX > targetX then
-      begin
-          // First find the next closest from the target in the opposite direction
-          for i := 0 to Floor[sfloor].MonsterCount - 1 do
-          begin
-            if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[target].map_section) and
-              ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_X < targetX)
-              and (round(Floor[sfloor].Monster[i].Pos_Y) = round(Floor[sfloor].Monster[target].Pos_Y))
-              and (i <> target) and (i <> selected) then
-              begin
-                diff := abs(targetX - Floor[sfloor].Monster[i].Pos_X);
-                if diff < diffmin then
-                begin
-                  diffmin := diff;
-                  closest := i;
-                end;
-              end;
-          end;
-          // Find the difference
-          if closest <> -1 then
-            diff := abs(targetX - Floor[sfloor].Monster[closest].Pos_X);
-         // Offset the selection by the difference
-         if diff <> 0 then
-          Floor[sfloor].Monster[selected].Pos_X := targetX + diff;
-      end
-    end;
-
-    if sType = 2 then
-    begin
-      selectionX := Floor[sfloor].obj[selected].Pos_X;
-      targetX := Floor[sfloor].obj[target].Pos_X;
-
-      if selectionX < targetX then
-      begin
-          // First find the next closest from the target in the opposite direction
-          for i := 0 to Floor[sfloor].ObjCount - 1 do
-          begin
-            if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[target].map_section) and
-              ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X > targetX)
-              and (round(Floor[sfloor].Obj[i].Pos_Y) = round(Floor[sfloor].Obj[target].Pos_Y))
-              and (i <> target) and (i <> selected) then
-              begin
-                diff := abs(targetX - Floor[sfloor].Obj[i].Pos_X);
-                if diff < diffmin then
-                begin
-                  diffmin := diff;
-                  closest := i;
-                end;
-              end;
-          end;
-          // Find the difference
-          if closest <> -1 then
-            diff := abs(targetX - Floor[sfloor].Obj[closest].Pos_X);
-         // Offset the selection by the difference
-         if diff <> 0 then
-          Floor[sfloor].Obj[selected].Pos_X := targetX - diff;
-      end
-      else if selectionX > targetX then
-      begin
-          // First find the next closest from the target in the opposite direction
-          for i := 0 to Floor[sfloor].ObjCount - 1 do
-          begin
-            if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[target].map_section) and
-              ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_X < targetX)
-              and (round(Floor[sfloor].Obj[i].Pos_Y) = round(Floor[sfloor].Obj[target].Pos_Y))
-              and (i <> target) and (i <> selected) then
-              begin
-                diff := abs(targetX - Floor[sfloor].Obj[i].Pos_X);
-                if diff < diffmin then
-                begin
-                  diffmin := diff;
-                  closest := i;
-                end;
-              end;
-          end;
-          // Find the difference
-          if closest <> -1 then
-            diff := abs(targetX - Floor[sfloor].Obj[closest].Pos_X);
-         // Offset the selection by the difference
-         if diff <> 0 then
-          Floor[sfloor].Obj[selected].Pos_X := targetX + diff;
-      end
-    end;
-  end;
-end;
-
-procedure AdjustDistanceY3D(target: integer);
-var
-  i,closest: integer;
-  selectionX,targetX: single;
-  diff,diffmin: double;
-begin
-  if FPlacementOptions.chkSnapDistance.Checked then
-  begin
-    diff := 0;
-    diffmin := Double.MaxValue;
-    closest := -1;
-
-    if sType = 1 then
-    begin
-      selectionX := Floor[sfloor].Monster[selected].Pos_Y;
-      targetX := Floor[sfloor].Monster[target].Pos_Y;
-
-      if selectionX < targetX then
-      begin
-          // First find the next closest from the target in the opposite direction
-          for i := 0 to Floor[sfloor].MonsterCount - 1 do
-          begin
-            if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[target].map_section) and
-              ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y > targetX)
-              and (round(Floor[sfloor].Monster[i].Pos_X) = round(Floor[sfloor].Monster[target].Pos_X))
-              and (i <> target) and (i <> selected) then
-              begin
-                diff := abs(targetX - Floor[sfloor].Monster[i].Pos_Y);
-                if diff < diffmin then
-                begin
-                  diffmin := diff;
-                  closest := i;
-                end;
-              end;
-          end;
-          // Find the difference
-          if closest <> -1 then
-            diff := abs(targetX - Floor[sfloor].Monster[closest].Pos_Y);
-         // Offset the selection by the difference
-         if diff <> 0 then
-          Floor[sfloor].Monster[selected].Pos_Y := targetX - diff;
-      end
-      else if selectionX > targetX then
-      begin
-          // First find the next closest from the target in the opposite direction
-          for i := 0 to Floor[sfloor].MonsterCount - 1 do
-          begin
-            if (Floor[sfloor].Monster[i].map_section = Floor[sfloor].Monster[target].map_section) and
-              ((Floor[sfloor].Monster[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Monster[i].Pos_Y < targetX)
-              and (round(Floor[sfloor].Monster[i].Pos_X) = round(Floor[sfloor].Monster[target].Pos_X))
-              and (i <> target) and (i <> selected) then
-              begin
-                diff := abs(targetX - Floor[sfloor].Monster[i].Pos_Y);
-                if diff < diffmin then
-                begin
-                  diffmin := diff;
-                  closest := i;
-                end;
-              end;
-          end;
-          // Find the difference
-          if closest <> -1 then
-            diff := abs(targetX - Floor[sfloor].Monster[closest].Pos_Y);
-         // Offset the selection by the difference
-         if diff <> 0 then
-          Floor[sfloor].Monster[selected].Pos_Y := targetX + diff;
-      end
-    end;
-
-    if sType = 2 then
-    begin
-      selectionX := Floor[sfloor].obj[selected].Pos_Y;
-      targetX := Floor[sfloor].obj[target].Pos_Y;
-
-      if selectionX < targetX then
-      begin
-          // First find the next closest from the target in the opposite direction
-          for i := 0 to Floor[sfloor].ObjCount - 1 do
-          begin
-            if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[target].map_section) and
-              ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y > targetX)
-              and (round(Floor[sfloor].Obj[i].Pos_X) = round(Floor[sfloor].Obj[target].Pos_X))
-              and (i <> target) and (i <> selected) then
-              begin
-                diff := abs(targetX - Floor[sfloor].Obj[i].Pos_Y);
-                if diff < diffmin then
-                begin
-                  diffmin := diff;
-                  closest := i;
-                end;
-              end;
-          end;
-          // Find the difference
-          if closest <> -1 then
-            diff := abs(targetX - Floor[sfloor].Obj[closest].Pos_Y);
-         // Offset the selection by the difference
-         if diff <> 0 then
-          Floor[sfloor].Obj[selected].Pos_Y := targetX - diff;
-      end
-      else if selectionX > targetX then
-      begin
-          // First find the next closest from the target in the opposite direction
-          for i := 0 to Floor[sfloor].ObjCount - 1 do
-          begin
-            if (Floor[sfloor].Obj[i].map_section = Floor[sfloor].Obj[target].map_section) and
-              ((Floor[sfloor].Obj[i].Unknow5 = showwave) or (showwave = -1)) and (Floor[sfloor].Obj[i].Pos_Y < targetX)
-              and (round(Floor[sfloor].Obj[i].Pos_X) = round(Floor[sfloor].Obj[target].Pos_X))
-              and (i <> target) and (i <> selected) then
-              begin
-                diff := abs(targetX - Floor[sfloor].Obj[i].Pos_Y);
-                if diff < diffmin then
-                begin
-                  diffmin := diff;
-                  closest := i;
-                end;
-              end;
-          end;
-          // Find the difference
-          if closest <> -1 then
-            diff := abs(targetX - Floor[sfloor].Obj[closest].Pos_Y);
-         // Offset the selection by the difference
-         if diff <> 0 then
-          Floor[sfloor].Obj[selected].Pos_Y := targetX + diff;
+          Floor[sfloor].Obj[selectionidx].Pos_Y := targetX + diff;
       end
     end;
   end;
@@ -6270,7 +6022,8 @@ begin
                 begin
                   // Save closest snap target
                   diff := abs(Floor[sfloor].Monster[MoveSel].Pos_Y - Floor[sfloor].Monster[j].Pos_Y);
-                  if (diff <= distancelimit) or (not FPlacementOptions.chkDistancelimit.Checked) then
+                  if ((diff <= distancelimit) and (FPlacementOptions.chkDistancelimit.Checked))
+                  or (not FPlacementOptions.chkDistancelimit.Checked) then
                   begin
                     Floor[sfloor].Monster[MoveSel].Pos_X := Floor[sfloor].Monster[j].Pos_X;
                     // Match monster's rotations if enabled
@@ -6306,7 +6059,8 @@ begin
                 begin
                   // Save closest snap target
                   diff := abs(Floor[sfloor].Monster[MoveSel].Pos_X - Floor[sfloor].Monster[j].Pos_X);
-                  if (diff <= distancelimit) or (not FPlacementOptions.chkDistancelimit.Checked) then
+                  if ((diff <= distancelimit) and (FPlacementOptions.chkDistancelimit.Checked))
+                  or (not FPlacementOptions.chkDistancelimit.Checked) then
                   begin
                     Floor[sfloor].Monster[MoveSel].Pos_Y := Floor[sfloor].Monster[j].Pos_Y;
                     if FPlacementOptions.chkSnapRotate.Checked then
@@ -6373,7 +6127,8 @@ begin
                 begin
                   // Save closest snap target
                   diff := abs(Floor[sfloor].Obj[MoveSel].Pos_Y - Floor[sfloor].Obj[j].Pos_Y);
-                  if (diff <= distancelimit) or (not FPlacementOptions.chkDistancelimit.Checked) then
+                  if ((diff <= distancelimit) and (FPlacementOptions.chkDistancelimit.Checked))
+                  or (not FPlacementOptions.chkDistancelimit.Checked) then
                   begin
                     Floor[sfloor].Obj[MoveSel].Pos_X := Floor[sfloor].Obj[j].Pos_X;
                     // Match object's rotations if enabled
@@ -6409,7 +6164,8 @@ begin
                 begin
                   // Save closest snap target
                   diff := abs(Floor[sfloor].Obj[MoveSel].Pos_X - Floor[sfloor].Obj[j].Pos_X);
-                  if (diff <= distancelimit) or (not FPlacementOptions.chkDistancelimit.Checked) then
+                  if ((diff <= distancelimit) and (FPlacementOptions.chkDistancelimit.Checked))
+                  or (not FPlacementOptions.chkDistancelimit.Checked) then
                   begin
                     Floor[sfloor].Obj[MoveSel].Pos_Y := Floor[sfloor].Obj[j].Pos_Y;
                     if FPlacementOptions.chkSnapRotate.Checked then

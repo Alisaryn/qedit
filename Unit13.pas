@@ -356,7 +356,8 @@ begin
                       begin
                         // Save closest snap target
                         diff := abs(Floor[sfloor].Monster[selected].Pos_Y - Floor[sfloor].Monster[j].Pos_Y);
-                        if (diff <= distancelimit) or (not FPlacementOptions.chkDistancelimit.Checked) then
+                        if ((diff <= distancelimit) and (FPlacementOptions.chkDistancelimit.Checked))
+                        or (not FPlacementOptions.chkDistancelimit.Checked) then
                         begin
                           floor[sfloor].Monster[selected].Pos_X := floor[sfloor].Monster[j].Pos_X;
                           mymonst[selected].PositionX := mymonst[j].PositionX;
@@ -375,7 +376,7 @@ begin
                 end;
               end;
               if closest > -1 then
-                AdjustDistanceY3D(closest);
+                AdjustDistanceY(closest);
 
               diffmin := Double.MaxValue;
               closest := -1;
@@ -393,7 +394,8 @@ begin
                       begin
                         // Save closest snap target
                         diff := abs(Floor[sfloor].Monster[selected].Pos_X - Floor[sfloor].Monster[j].Pos_X);
-                        if (diff <= distancelimit) or (not FPlacementOptions.chkDistancelimit.Checked) then
+                        if ((diff <= distancelimit) and (FPlacementOptions.chkDistancelimit.Checked))
+                        or (not FPlacementOptions.chkDistancelimit.Checked) then
                         begin
                           floor[sfloor].Monster[selected].Pos_Y := floor[sfloor].Monster[j].Pos_Y;
                           mymonst[selected].PositionY := mymonst[j].PositionY;
@@ -411,7 +413,7 @@ begin
                 end;
               end;
               if closest > -1 then
-                AdjustDistanceX3D(closest);
+                AdjustDistanceX(closest);
               GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
             end;
 
@@ -446,7 +448,8 @@ begin
                       begin
                         // Save closest snap target
                         diff := abs(Floor[sfloor].Obj[selected].Pos_Y - Floor[sfloor].Obj[j].Pos_Y);
-                        if (diff <= distancelimit) or (not FPlacementOptions.chkDistancelimit.Checked) then
+                        if ((diff <= distancelimit) and (FPlacementOptions.chkDistancelimit.Checked))
+                        or (not FPlacementOptions.chkDistancelimit.Checked) then
                         begin
                           floor[sfloor].Obj[selected].Pos_X := floor[sfloor].Obj[j].Pos_X;
                           myobj[selected].PositionX := myobj[j].PositionX;
@@ -466,7 +469,7 @@ begin
               end;
 
               if closest > -1 then
-                AdjustDistanceY3D(closest);
+                AdjustDistanceY(closest);
 
               diffmin := Double.MaxValue;
               closest := -1;
@@ -484,7 +487,8 @@ begin
                       begin
                         // Save closest snap target
                         diff := abs(Floor[sfloor].Obj[selected].Pos_X - Floor[sfloor].Obj[j].Pos_X);
-                        if (diff <= distancelimit) or (not FPlacementOptions.chkDistancelimit.Checked) then
+                        if ((diff <= distancelimit) and (FPlacementOptions.chkDistancelimit.Checked))
+                        or (not FPlacementOptions.chkDistancelimit.Checked) then
                         begin
                           floor[sfloor].Obj[selected].Pos_Y := floor[sfloor].Obj[j].Pos_Y;
                           myobj[selected].PositionY := myobj[j].PositionY;
@@ -502,7 +506,7 @@ begin
                 end;
               end;
               if closest > -1 then
-                AdjustDistanceX3D(closest);
+                AdjustDistanceX(closest);
               myobj[selected].Free;
               Generateobj(floor[sfloor].obj[selected],selected);
             end;
