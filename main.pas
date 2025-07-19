@@ -551,7 +551,7 @@ var
   autoaxis: Boolean = false;
   snaprotate: Boolean = false;
   snapdistance: Boolean = false;
-  anchorenabled: Boolean = true;
+  anchorenabled: Boolean = false;
   disableindicator: Boolean = false;
   fullscreen: Boolean = false;
   OffsetX: single = 0.0;
