@@ -123,7 +123,7 @@ begin
   seSnapTolerance.Value := 10;
   seDistanceLimit.Value := 30;
   seDistanceLimit.Enabled := false;
-  chkDistanceLimit.Checked := false;
+  chkDistanceLimit.Checked := true;
   chkSnapRotate.Checked := false;
   chkSnapDistance.Checked := false;
 end;

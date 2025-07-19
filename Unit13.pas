@@ -398,7 +398,7 @@ begin
                         or (not FPlacementOptions.chkDistancelimit.Checked) then
                         begin
                           floor[sfloor].Monster[selected].Pos_Y := floor[sfloor].Monster[j].Pos_Y;
-                          mymonst[selected].PositionY := mymonst[j].PositionY;
+                          mymonst[selected].PositionZ := mymonst[j].PositionZ;
                           if (FPlacementOptions.chkSnapRotate.Checked) then
                             floor[sfloor].Monster[selected].Direction := floor[sfloor].Monster[j].Direction;
                           if (diff < diffmin) and (j <> selected) then
@@ -413,7 +413,10 @@ begin
                 end;
               end;
               if closest > -1 then
+              begin
                 AdjustDistanceX(closest);
+                AdjustDistanceZ(closest);
+              end;
               GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
             end;
 
@@ -491,7 +494,7 @@ begin
                         or (not FPlacementOptions.chkDistancelimit.Checked) then
                         begin
                           floor[sfloor].Obj[selected].Pos_Y := floor[sfloor].Obj[j].Pos_Y;
-                          myobj[selected].PositionY := myobj[j].PositionY;
+                          myobj[selected].PositionZ := myobj[j].PositionZ;
                           if (FPlacementOptions.chkSnapRotate.Checked) then
                             floor[sfloor].Obj[selected].unknow6 := floor[sfloor].Obj[j].unknow6;
                           if (diff < diffmin) and (j <> selected) then
@@ -506,7 +509,10 @@ begin
                 end;
               end;
               if closest > -1 then
+              begin
                 AdjustDistanceX(closest);
+                AdjustDistanceZ(closest);
+              end;
               myobj[selected].Free;
               Generateobj(floor[sfloor].obj[selected],selected);
             end;
