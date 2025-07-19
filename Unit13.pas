@@ -375,7 +375,7 @@ begin
                 end;
               end;
               if closest > -1 then
-                AdjustDistanceY(closest);
+                AdjustDistanceY3D(closest);
 
               diffmin := Double.MaxValue;
               closest := -1;
@@ -411,7 +411,7 @@ begin
                 end;
               end;
               if closest > -1 then
-                AdjustDistanceX(closest);
+                AdjustDistanceX3D(closest);
               GenerateMonsterName(Floor[sfloor].Monster[selected],selected,2);
             end;
 
@@ -466,7 +466,7 @@ begin
               end;
 
               if closest > -1 then
-                AdjustDistanceY(closest);
+                AdjustDistanceY3D(closest);
 
               diffmin := Double.MaxValue;
               closest := -1;
@@ -502,7 +502,7 @@ begin
                 end;
               end;
               if closest > -1 then
-                AdjustDistanceX(closest);
+                AdjustDistanceX3D(closest);
               myobj[selected].Free;
               Generateobj(floor[sfloor].obj[selected],selected);
             end;
