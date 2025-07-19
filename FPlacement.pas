@@ -31,12 +31,12 @@ type
     btnReset: TButton;
     chkSnapRotate: TCheckBox;
     chkSnapDistance: TCheckBox;
-    Label9: TLabel;
     seDistanceLimit: TSpinEdit;
+    chkDistancelimit: TCheckBox;
     procedure btnSaveClick(Sender: TObject);
     procedure btnResetClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure chkSnapDistanceClick(Sender: TObject);
+    procedure chkDistanceLimitClick(Sender: TObject);
 
   private
     { Private declarations }
@@ -71,6 +71,7 @@ begin
       Reg.WriteInteger('DistanceLimit', seDistanceLimit.Value);
       Reg.WriteBool('SnapRotate', chkSnapRotate.Checked);
       Reg.WriteBool('SnapDistance', chkSnapDistance.Checked);
+      Reg.WriteBool('AnchorEnabled', chkDistanceLimit.Checked);
       Reg.CloseKey;
     end;
   finally
@@ -79,9 +80,9 @@ begin
     close;
 end;
 
-procedure TFPlacementOptions.chkSnapDistanceClick(Sender: TObject);
+procedure TFPlacementOptions.chkDistanceLimitClick(Sender: TObject);
 begin
-  seDistanceLimit.Enabled := chkSnapDistance.Checked;
+  seDistanceLimit.Enabled := chkDistanceLimit.Checked;
 end;
 
 procedure TFPlacementOptions.FormCreate(Sender: TObject);
@@ -120,8 +121,9 @@ begin
   nbDefaultY.Value := 0.0;
   nbDefaultZ.Value := 0.0;
   seSnapTolerance.Value := 10;
-  seDistanceLimit.Value := 0;
+  seDistanceLimit.Value := 30;
   seDistanceLimit.Enabled := false;
+  chkDistanceLimit.Checked := false;
   chkSnapRotate.Checked := false;
   chkSnapDistance.Checked := false;
 end;

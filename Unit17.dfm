@@ -3,7 +3,7 @@ object Form17: TForm17
   Top = 196
   BorderStyle = bsDialog
   Caption = '3D Settings'
-  ClientHeight = 264
+  ClientHeight = 274
   ClientWidth = 180
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -68,7 +68,7 @@ object Form17: TForm17
   end
   object Button1: TButton
     Left = 54
-    Top = 230
+    Top = 235
     Width = 75
     Height = 25
     Caption = 'Save'
