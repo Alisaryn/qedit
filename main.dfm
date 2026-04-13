@@ -893,6 +893,20 @@ object Form1: TForm1
         Caption = 'Show bitmap overlays'
         OnClick = Showbitmapoverlays1Click
       end
+      object MapRenderMode1: TMenuItem
+        Caption = 'Map render mode'
+        object MapRenderRaw1: TMenuItem
+          Caption = 'Raw (all triangles)'
+          Checked = True
+          RadioItem = True
+          OnClick = MapRenderRaw1Click
+        end
+        object MapRenderFiltered1: TMenuItem
+          Caption = 'Filtered (floor only)'
+          RadioItem = True
+          OnClick = MapRenderFiltered1Click
+        end
+      end
       object InvertYrotation2: TMenuItem
         Caption = 'Invert Y rotation'
         ShortCut = 32854

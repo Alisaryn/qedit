@@ -372,6 +372,9 @@ type
     Image2: TPaintBox;
     showbmp: TMenuItem;
     Showbitmapoverlays1: TMenuItem;
+    MapRenderMode1: TMenuItem;
+    MapRenderRaw1: TMenuItem;
+    MapRenderFiltered1: TMenuItem;
     Markerbrightness1: TMenuItem;
     Default1: TMenuItem;
     High1: TMenuItem;
@@ -600,6 +603,8 @@ type
     procedure Image2Paint(Sender: TObject);
     procedure showbmpClick(Sender: TObject);
     procedure Showbitmapoverlays1Click(Sender: TObject);
+    procedure MapRenderRaw1Click(Sender: TObject);
+    procedure MapRenderFiltered1Click(Sender: TObject);
     procedure Default1Click(Sender: TObject);
     procedure High1Click(Sender: TObject);
     procedure Veryhigh1Click(Sender: TObject);
@@ -888,6 +893,7 @@ var
   placelookat: Boolean = false;
   placerotation: integer = 0;
   darkmode: Boolean = false;
+  mapRenderMode: integer = 0; // 0=raw (default), 1=filtered (floor only)
   previewstate: integer = 0;
   previewstring: string;
   previewpaused: Boolean = false;
@@ -6015,7 +6021,7 @@ procedure TForm1.ClientDataSet1RotationYGetText(Sender: TField;
 begin
   if not Sender.IsNull and not editgrid then
   begin
-    Text := Sender.AsString + '°';
+    Text := Sender.AsString + 'ï¿½';
   end
   else Text := Sender.AsString;
 end;
@@ -6261,7 +6267,7 @@ procedure TForm1.ClientDataSet2RotXGetText(Sender: TField; var Text: string;
 begin
   if not Sender.IsNull and not editgrid then
   begin
-    Text := Sender.AsString + '°';
+    Text := Sender.AsString + 'ï¿½';
   end
   else Text := Sender.AsString;
 end;
@@ -6287,7 +6293,7 @@ procedure TForm1.ClientDataSet2RotYGetText(Sender: TField; var Text: string;
 begin
   if not Sender.IsNull and not editgrid then
   begin
-    Text := Sender.AsString + '°';
+    Text := Sender.AsString + 'ï¿½';
   end
   else Text := Sender.AsString;
 end;
@@ -6313,7 +6319,7 @@ procedure TForm1.ClientDataSet2RotZGetText(Sender: TField; var Text: string;
 begin
   if not Sender.IsNull and not editgrid then
   begin
-    Text := Sender.AsString + '°';
+    Text := Sender.AsString + 'ï¿½';
   end
   else Text := Sender.AsString;
 end;
@@ -6461,7 +6467,7 @@ begin
     Image1.Canvas.TextOut(130, 22, 'Pos Y : ' + inttostr(round(Floor[sfloor].Monster[Selected].Pos_Z)));
     Image1.Canvas.TextOut(250, 22, 'Pos Z : ' + inttostr(round(Floor[sfloor].Monster[Selected].Pos_Y)));
     Image1.Canvas.TextOut(330, 22, 'Rotation : ' + inttostr((Floor[sfloor].Monster[Selected].Direction) and
-      $FFFF div 182) + '°');
+      $FFFF div 182) + 'ï¿½');
 
     if have3d and form17.chkFollow.Checked then
     begin
@@ -6572,7 +6578,7 @@ begin
     Image1.Canvas.TextOut(150, 22, 'Pos Y : ' + inttostr(round(Floor[sfloor].Obj[Selected].Pos_Z)));
     Image1.Canvas.TextOut(260, 22, 'Pos Z : ' + inttostr(round(Floor[sfloor].Obj[Selected].Pos_Y)));
     Image1.Canvas.TextOut(260, 4, 'Direction : ' + inttostr((Floor[sfloor].Obj[Selected].unknow6 and $FFFF)
-      div 182) + '°');
+      div 182) + 'ï¿½');
 
     if have3d and form17.chkFollow.Checked then
     begin
@@ -7350,8 +7356,29 @@ begin
         While y > 0 do
         begin
           BBRelFile.read(pt, 8);
-          // put in the z maping
-          // if (pt[3] and 64 = 64) or (pt[3] and 1 = 1) then // and (pt[3] and $8000 = 0)then     //1 = top+floor  32 = wall
+          // Filtered mode: only draw floor triangles (flags bit0/4/6 + normal check)
+          if (mapRenderMode = 1) and not (((pt[3] and 1 = 1) or (pt[3] and 16 = 16) or (pt[3] and 64 = 64))) then
+          begin
+            BBRelFile.Seek(28, 1);
+            dec(y);
+            continue;
+          end;
+          // In filtered mode, read normal Y and check angle < 75 degrees
+          if (mapRenderMode = 1) then
+          begin
+            var normalY: Single;
+            BBRelFile.Seek(4, 1); // skip normal X
+            BBRelFile.read(normalY, 4); // read normal Y
+            BBRelFile.Seek(20, 1); // skip normal Z + 16 bytes padding
+            if normalY < 0.2588 then // cos(75 degrees)
+            begin
+              dec(y);
+              continue;
+            end;
+          end
+          else
+            BBRelFile.Seek(28, 1); // raw mode: skip normal + padding as before
+
           if ((round((tmppoint[pt[0]][0] + mpx) / Zoom) >= -mmx) and (round((tmppoint[pt[0]][0] + mpx) / Zoom) <= mmx +
             1) and (round((tmppoint[pt[0]][2] + mpy) / Zoom) >= -mmy) and
             (round((tmppoint[pt[0]][2] + mpy) / Zoom) <= mmy + 1)) or
@@ -7364,30 +7391,46 @@ begin
             1) and (round((tmppoint[pt[2]][2] + mpy) / Zoom) >= -mmy) and
             (round((tmppoint[pt[2]][2] + mpy) / Zoom) <= mmy + 1)) then
           begin
-            // get other point
             rel1[0] := tmppoint[pt[0]][0];
             rel1[2] := tmppoint[pt[0]][2];
             rel[0] := tmppoint[pt[1]][0];
             rel[2] := tmppoint[pt[1]][2];
 
-            // BBRelBmp.Canvas.Pen.Color:=130+(round(tmppoint[pt[0]][1])*2);
-            if (pt[3] and 64 = 64) then
-              BBRelBmp.Canvas.Pen.Color := ClBlue
-            else if (pt[3] and 16 = 16) then
-              BBRelBmp.Canvas.Pen.Color := $7FFF7F
-            else if (pt[3] and 1 = 1) then
+            if (mapRenderMode = 1) then
             begin
+              // Filtered mode: filled polygon, uniform color
               if darkmode then
-                BBRelBmp.Canvas.Pen.Color := RGB(135,135,135)
+              begin
+                BBRelBmp.Canvas.Brush.Color := RGB(135,135,135);
+                BBRelBmp.Canvas.Pen.Color := RGB(135,135,135);
+              end
               else
-                BBRelBmp.Canvas.Pen.Color := $999999 // $90D517//$77AD19
+              begin
+                BBRelBmp.Canvas.Brush.Color := $999999;
+                BBRelBmp.Canvas.Pen.Color := $999999;
+              end;
             end
             else
             begin
-              if darkmode then
-                BBRelBmp.Canvas.Pen.Color := RGB(200,200,200)
+              // Raw mode: wireframe with color coding (original behavior)
+              if (pt[3] and 64 = 64) then
+                BBRelBmp.Canvas.Pen.Color := ClBlue
+              else if (pt[3] and 16 = 16) then
+                BBRelBmp.Canvas.Pen.Color := $7FFF7F
+              else if (pt[3] and 1 = 1) then
+              begin
+                if darkmode then
+                  BBRelBmp.Canvas.Pen.Color := RGB(135,135,135)
+                else
+                  BBRelBmp.Canvas.Pen.Color := $999999
+              end
               else
-                BBRelBmp.Canvas.Pen.Color := clblack;
+              begin
+                if darkmode then
+                  BBRelBmp.Canvas.Pen.Color := RGB(200,200,200)
+                else
+                  BBRelBmp.Canvas.Pen.Color := clblack;
+              end;
             end;
 
             tpt[0].x := round((rel1[0] + mpx) / Zoom) + mmx;
@@ -7400,10 +7443,12 @@ begin
             tpt[2].x := round((rel[0] + mpx) / Zoom) + mmx;
             tpt[2].y := round((rel[2] + mpy) / Zoom) + mmy;
             tpt[3] := tpt[0];
-            BBRelBmp.Canvas.Polyline(tpt);
+            if (mapRenderMode = 1) then
+              BBRelBmp.Canvas.Polygon(Slice(tpt, 3)) // filled polygon
+            else
+              BBRelBmp.Canvas.Polyline(tpt); // wireframe (original)
           end;
 
-          BBRelFile.Seek(28, 1);
           dec(y);
         end;
         BBRelFile.Seek(tab, 0);
@@ -11935,6 +11980,24 @@ end;
 procedure TForm1.Showbitmapoverlays1Click(Sender: TObject);
 begin
   showbmpclick(nil);
+end;
+
+procedure TForm1.MapRenderRaw1Click(Sender: TObject);
+begin
+  mapRenderMode := 0;
+  MapRenderRaw1.Checked := True;
+  MapRenderFiltered1.Checked := False;
+  BBRelFileName := ''; // force reload
+  DrawMap;
+end;
+
+procedure TForm1.MapRenderFiltered1Click(Sender: TObject);
+begin
+  mapRenderMode := 1;
+  MapRenderRaw1.Checked := False;
+  MapRenderFiltered1.Checked := True;
+  BBRelFileName := ''; // force reload
+  DrawMap;
 end;
 
 procedure TForm1.showbmpClick(Sender: TObject);
