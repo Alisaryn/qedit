@@ -7,6 +7,7 @@ uses
   ImgList, Dialogs, Math, Menus, StdCtrls, ExtCtrls, CheckLst, ComCtrls, System.Types,
   ShellApi, D3DEngin, registry, Spin, System.ImageList, System.Generics.Collections,
   System.Generics.Defaults, StrUtils, System.Actions, System.IOUtils, Vcl.ActnList, Vcl.Themes,
+  Winapi.GDIPAPI, Winapi.GDIPOBJ, Winapi.GDIPUTIL,
   Vcl.Styles, Data.DB, Datasnap.DBClient, Vcl.Grids, Vcl.DBGrids, Vcl.Buttons, Vcl.DBCtrls;
 
 const
@@ -263,7 +264,7 @@ type
     Episode41: TMenuItem;
     N2: TMenuItem;
     Button11: TButton;
-    Label5: TLabel;
+    Label5: TPanel;
     ool1: TMenuItem;
     OpenDialog2: TOpenDialog;
     SaveDialog2: TSaveDialog;
@@ -372,6 +373,11 @@ type
     Image2: TPaintBox;
     showbmp: TMenuItem;
     Showbitmapoverlays1: TMenuItem;
+    MapRenderMode1: TMenuItem;
+    MapRenderWireframe1: TMenuItem;
+    MapRenderTopographic1: TMenuItem;
+    MapRenderShadingSep1: TMenuItem;
+    MapRenderHeightShading1: TMenuItem;
     Markerbrightness1: TMenuItem;
     Default1: TMenuItem;
     High1: TMenuItem;
@@ -462,6 +468,8 @@ type
     smRedo: TMenuItem;
     Redo1: TMenuItem;
     Redo2: TMenuItem;
+    btnCollapseTop: TButton;
+    procedure btnCollapseTopClick(Sender: TObject);
     procedure Quit1Click(Sender: TObject);
     procedure Load1Click(Sender: TObject);
     procedure CheckListBox1Click(Sender: TObject);
@@ -600,6 +608,9 @@ type
     procedure Image2Paint(Sender: TObject);
     procedure showbmpClick(Sender: TObject);
     procedure Showbitmapoverlays1Click(Sender: TObject);
+    procedure MapRenderWireframe1Click(Sender: TObject);
+    procedure MapRenderTopographic1Click(Sender: TObject);
+    procedure MapRenderHeightShading1Click(Sender: TObject);
     procedure Default1Click(Sender: TObject);
     procedure High1Click(Sender: TObject);
     procedure Veryhigh1Click(Sender: TObject);
@@ -714,6 +725,7 @@ type
   private
     FClosedSuccessfully: Boolean;
     procedure MenueDrawItemX(xMenu: TMenu);
+    procedure SetTopCollapsed(collapsed: Boolean);
     { Private declarations }
   public
     property ClosedSuccessfully: Boolean read FClosedSuccessfully;
@@ -812,6 +824,19 @@ var
   BBRelFileName: ansistring;
   BBRelFile: TMemoryStream = nil;
   BBRelBmp: TBitmap;
+  // Outline-mode cache (invalidated when filename changes)
+  cachedOutlineFor: ansistring = '';
+  cachedOutlineContours: TArray<TArray<TGPPointF>>;   // world-space XZ per contour
+  cachedOutlineAvgY: TArray<Single>;
+  cachedOutlineParent: TArray<Integer>;
+  cachedOutlineDepth: TArray<Integer>;
+  cachedOutlineCount: Integer = 0;
+  cachedOutlineMinY: Single = 0;
+  cachedOutlineMaxY: Single = 0;
+  // Interior edges (shared between two triangles) — drawn as fine triangulation
+  // inside contour-traced rooms. Flat 2N array: consecutive pairs are line segments.
+  cachedOutlineInterior: TArray<TGPPointF>;
+  cachedOutlineInteriorCount: Integer = 0;
   TrData, TrFnc, TrReg, Tropc, TrTmp: ttreenode;
   TsData, TsFnc, TsReg, Tsopc, Monsterini: tstringlist;
   showwave: integer = -1;
@@ -888,6 +913,9 @@ var
   placelookat: Boolean = false;
   placerotation: integer = 0;
   darkmode: Boolean = false;
+  mapRenderMode: integer = 0; // 0=wireframe (every triangle outlined), 1=topographic (height-tinted contours + interior triangulation)
+  topoHeightShading: Boolean = false; // when off, topo floors use a flat neutral fill and the height legend is hidden
+  topCollapsed: Boolean = false;
   previewstate: integer = 0;
   previewstring: string;
   previewpaused: Boolean = false;
@@ -4052,7 +4080,7 @@ begin
       end;
     end
     else
-      BBRelBmp.Canvas.TextOut(5, 5, GetLanguageString(54) + ' ' + inttohex(sms, 2));
+      BBRelBmp.Canvas.TextOut(5, 5, GetLanguageString(54) + ' ' + inttostr(sms));
     BBRelBmp.Canvas.Font.Color := clBlack;
   except
   end;
@@ -5551,10 +5579,6 @@ begin
 
   if size = 1 then
   begin
-    form1.label5.Left := 386;
-    form1.label5.Top := 225;
-    form1.label5.Width := 11;
-    form1.label5.Height := 16;
     form1.label5.Font.Size := 10;
     form1.Mediumfont1.Checked := true;
     Reg := TRegistry.Create;
@@ -5571,10 +5595,6 @@ begin
   end
   else if size = 2 then
   begin
-    form1.label5.Left := 387;
-    form1.label5.Top := 222;
-    form1.label5.Width := 10;
-    form1.label5.Height := 20;
     form1.label5.Font.Size := 12;
     form1.Largefont1.Checked := true;
     Reg := TRegistry.Create;
@@ -5591,10 +5611,6 @@ begin
   end
   else
   begin
-    form1.label5.Left := 384;
-    form1.label5.Top := 228;
-    form1.label5.Width := 6;
-    form1.label5.Height := 13;
     form1.label5.Font.Size := 8;
     form1.Smallfont1.Checked := true;
     Reg := TRegistry.Create;
@@ -6015,7 +6031,7 @@ procedure TForm1.ClientDataSet1RotationYGetText(Sender: TField;
 begin
   if not Sender.IsNull and not editgrid then
   begin
-    Text := Sender.AsString + '�';
+    Text := Sender.AsString + #$00B0;
   end
   else Text := Sender.AsString;
 end;
@@ -6261,7 +6277,7 @@ procedure TForm1.ClientDataSet2RotXGetText(Sender: TField; var Text: string;
 begin
   if not Sender.IsNull and not editgrid then
   begin
-    Text := Sender.AsString + '�';
+    Text := Sender.AsString + #$00B0;
   end
   else Text := Sender.AsString;
 end;
@@ -6287,7 +6303,7 @@ procedure TForm1.ClientDataSet2RotYGetText(Sender: TField; var Text: string;
 begin
   if not Sender.IsNull and not editgrid then
   begin
-    Text := Sender.AsString + '�';
+    Text := Sender.AsString + #$00B0;
   end
   else Text := Sender.AsString;
 end;
@@ -6313,7 +6329,7 @@ procedure TForm1.ClientDataSet2RotZGetText(Sender: TField; var Text: string;
 begin
   if not Sender.IsNull and not editgrid then
   begin
-    Text := Sender.AsString + '�';
+    Text := Sender.AsString + #$00B0;
   end
   else Text := Sender.AsString;
 end;
@@ -6461,7 +6477,7 @@ begin
     Image1.Canvas.TextOut(130, 22, 'Pos Y : ' + inttostr(round(Floor[sfloor].Monster[Selected].Pos_Z)));
     Image1.Canvas.TextOut(250, 22, 'Pos Z : ' + inttostr(round(Floor[sfloor].Monster[Selected].Pos_Y)));
     Image1.Canvas.TextOut(330, 22, 'Rotation : ' + inttostr((Floor[sfloor].Monster[Selected].Direction) and
-      $FFFF div 182) + '�');
+      $FFFF div 182) + #$00B0);
 
     if have3d and form17.chkFollow.Checked then
     begin
@@ -6572,7 +6588,7 @@ begin
     Image1.Canvas.TextOut(150, 22, 'Pos Y : ' + inttostr(round(Floor[sfloor].Obj[Selected].Pos_Z)));
     Image1.Canvas.TextOut(260, 22, 'Pos Z : ' + inttostr(round(Floor[sfloor].Obj[Selected].Pos_Y)));
     Image1.Canvas.TextOut(260, 4, 'Direction : ' + inttostr((Floor[sfloor].Obj[Selected].unknow6 and $FFFF)
-      div 182) + '�');
+      div 182) + #$00B0);
 
     if have3d and form17.chkFollow.Checked then
     begin
@@ -7057,7 +7073,7 @@ begin
           MidP[u.section].y + mmy + round(mpy / Zoom), Clskyblue, fsBorder);
         Image2.Canvas.Font.size := round(40 / Zoom);
         Image2.Canvas.TextOut(MidP[u.section].x + mmx + round((-40 + mpx) / Zoom),
-          MidP[u.section].y + mmy + round((-40 + mpy) / Zoom), inttohex(u.section, 2));
+          MidP[u.section].y + mmy + round((-40 + mpy) / Zoom), inttostr(u.section));
         Image2.Canvas.Font.size := 8;
       end;
     end;
@@ -7193,6 +7209,150 @@ begin
   end;
 end;
 
+procedure DouglasPeuckerRec(const pts: TArray<TGPPointF>; tol2: Single;
+  lo, hi: Integer; var keep: TArray<Boolean>);
+var
+  maxDist2, d2, dx, dy, len2, t, projX, projY, ax, ay, bx, by: Single;
+  maxIdx, i: Integer;
+begin
+  if hi <= lo + 1 then Exit;
+  ax := pts[lo].X; ay := pts[lo].Y;
+  bx := pts[hi].X; by := pts[hi].Y;
+  dx := bx - ax; dy := by - ay;
+  len2 := dx * dx + dy * dy;
+  maxDist2 := 0;
+  maxIdx := -1;
+  for i := lo + 1 to hi - 1 do
+  begin
+    if len2 < 1e-9 then
+    begin
+      dx := pts[i].X - ax;
+      dy := pts[i].Y - ay;
+      d2 := dx * dx + dy * dy;
+    end
+    else
+    begin
+      t := ((pts[i].X - ax) * (bx - ax) + (pts[i].Y - ay) * (by - ay)) / len2;
+      if t < 0 then t := 0 else if t > 1 then t := 1;
+      projX := ax + t * (bx - ax);
+      projY := ay + t * (by - ay);
+      dx := pts[i].X - projX;
+      dy := pts[i].Y - projY;
+      d2 := dx * dx + dy * dy;
+    end;
+    if d2 > maxDist2 then
+    begin
+      maxDist2 := d2;
+      maxIdx := i;
+    end;
+  end;
+  if (maxIdx >= 0) and (maxDist2 > tol2) then
+  begin
+    keep[maxIdx] := True;
+    DouglasPeuckerRec(pts, tol2, lo, maxIdx, keep);
+    DouglasPeuckerRec(pts, tol2, maxIdx, hi, keep);
+  end;
+end;
+
+function SimplifyContour(const pts: TArray<TGPPointF>; tol: Single): TArray<TGPPointF>;
+var
+  keep: TArray<Boolean>;
+  i, n, k: Integer;
+begin
+  n := Length(pts);
+  if n <= 4 then
+  begin
+    SetLength(Result, n);
+    for i := 0 to n - 1 do Result[i] := pts[i];
+    Exit;
+  end;
+  SetLength(keep, n);
+  keep[0] := True;
+  keep[n - 1] := True;
+  DouglasPeuckerRec(pts, tol * tol, 0, n - 1, keep);
+  k := 0;
+  for i := 0 to n - 1 do if keep[i] then Inc(k);
+  SetLength(Result, k);
+  k := 0;
+  for i := 0 to n - 1 do
+    if keep[i] then
+    begin
+      Result[k] := pts[i];
+      Inc(k);
+    end;
+end;
+
+function PolygonSignedArea(const pts: TArray<TGPPointF>): Double;
+var
+  i, n: Integer;
+begin
+  n := Length(pts);
+  Result := 0;
+  if n < 3 then Exit;
+  for i := 0 to n - 1 do
+    Result := Result + pts[i].X * pts[(i + 1) mod n].Y - pts[(i + 1) mod n].X * pts[i].Y;
+  Result := Result * 0.5;
+end;
+
+function PolygonCentroid(const pts: TArray<TGPPointF>): TGPPointF;
+var
+  i, n: Integer;
+  cx, cy, a, cross: Double;
+begin
+  n := Length(pts);
+  if n = 0 then
+  begin
+    Result.X := 0; Result.Y := 0; Exit;
+  end;
+  cx := 0; cy := 0; a := 0;
+  for i := 0 to n - 1 do
+  begin
+    cross := pts[i].X * pts[(i + 1) mod n].Y - pts[(i + 1) mod n].X * pts[i].Y;
+    cx := cx + (pts[i].X + pts[(i + 1) mod n].X) * cross;
+    cy := cy + (pts[i].Y + pts[(i + 1) mod n].Y) * cross;
+    a := a + cross;
+  end;
+  if Abs(a) < 1e-9 then
+  begin
+    Result.X := pts[0].X;
+    Result.Y := pts[0].Y;
+    Exit;
+  end;
+  Result.X := Single(cx / (3 * a));
+  Result.Y := Single(cy / (3 * a));
+end;
+
+function CreateRoundedRectPath(x, y, w, h, r: Single): TGPGraphicsPath;
+begin
+  Result := TGPGraphicsPath.Create;
+  if r * 2 > w then r := w / 2;
+  if r * 2 > h then r := h / 2;
+  Result.AddArc(x,             y,             2 * r, 2 * r, 180, 90);
+  Result.AddArc(x + w - 2 * r, y,             2 * r, 2 * r, 270, 90);
+  Result.AddArc(x + w - 2 * r, y + h - 2 * r, 2 * r, 2 * r,   0, 90);
+  Result.AddArc(x,             y + h - 2 * r, 2 * r, 2 * r,  90, 90);
+  Result.CloseFigure;
+end;
+
+function PointInPolygon(const p: TGPPointF; const pts: TArray<TGPPointF>): Boolean;
+var
+  i, j, n: Integer;
+  inside: Boolean;
+begin
+  n := Length(pts);
+  inside := False;
+  if n < 3 then Exit(False);
+  j := n - 1;
+  for i := 0 to n - 1 do
+  begin
+    if ((pts[i].Y > p.Y) <> (pts[j].Y > p.Y)) and
+       (p.X < (pts[j].X - pts[i].X) * (p.Y - pts[i].Y) / (pts[j].Y - pts[i].Y) + pts[i].X) then
+      inside := not inside;
+    j := i;
+  end;
+  Result := inside;
+end;
+
 procedure TForm1.DrawBBRELFile(filename: ansistring);
 var
   rel, rel1: array [0 .. 2] of Single;
@@ -7203,12 +7363,75 @@ var
   tmppoint: array [0 .. 10000] of array [0 .. 2] of Single;
   pt: array [0 .. 3] of word;
   tpt: array [0 .. 3] of TPoint;
+  // Outline mode variables
+  outlineLnX, outlineLnY: Single;
+  outlineLpt: array[0..3] of word;
+  outlineEdgeArr: array of Int64;
+  outlineEdgeCount, outlineRemY, outlineEi: integer;
+  outlineVa, outlineVb, outlineTmp: word;
+  outlineEk: Int64;
+  outlineTi: integer;
+  // Contour tracing
+  boundaryEdges: array of record a, b: word; used: boolean; end;
+  boundaryCount, seedEi, adjIdx, adjEi: integer;
+  vertAdj: TDictionary<word, TList<integer>>;
+  adjList: TList<integer>;
+  contourPts: TArray<TGPPointF>;
+  contourLen, cIdx: integer;
+  curV, nextV, startV: word;
+  foundNext: boolean;
+  contoursPts: TArray<TArray<TGPPointF>>;
+  contoursAvgY: TArray<Single>;
+  contoursCount: integer;
+  sumY: Double;
+  vCount: integer;
+  contMinY, contMaxY, heightT, shadowOffset: Single;
+  lowR, lowG, lowB, highR, highG, highB, strokeR, strokeG, strokeB: Byte;
+  fillR, fillG, fillB: Byte;
+  gpGraphics: TGPGraphics;
+  gpBrush, gpShadowBrush: TGPSolidBrush;
+  gpPen: TGPPen;
+  contoursCentroid: TArray<TGPPointF>;
+  contoursArea: TArray<Double>;
+  contoursParent: TArray<Integer>;
+  contoursDepth: TArray<Integer>;
+  contourPaths: TArray<TGPGraphicsPath>;
+  pIdx, depthWalker, bestParent, projIdx: Integer;
+  bestParentArea: Double;
+  projectedPts: TArray<TArray<TGPPointF>>;
+  screenTemp: TArray<TGPPointF>;
+  gpRawGraphics: TGPGraphics;
+  gpPenBlue, gpPenGreen, gpPenGray, gpPenDefault, curPen: TGPPen;
+  gpTrianglePts: array[0..2] of TGPPointF;
+  // Topographic mode: thin pen for interior (shared) edges painted between fill and boundary.
+  topoInteriorPen: TGPPen;
+  topoIeIdx: Integer;
+  // Per-section interior edges (world-XZ pairs), appended into the global cache after
+  // the section's edge sort/classification step.
+  interiorPts: TArray<TGPPointF>;
+  interiorCount: Integer;
+  interiorVa, interiorVb: word;
+  topoIntS1, topoIntS2: TGPPointF;
+  combinedPath: TGPGraphicsPath;
+  hatchBrush: TGPHatchBrush;
+  lgCardPath, lgBarPath: TGPGraphicsPath;
+  lgCardBrush, lgTextBrush, lgCardShadowBrush: TGPSolidBrush;
+  lgGradBrush: TGPLinearGradientBrush;
+  lgCardPen, lgBarPen: TGPPen;
+  lgFontFamily: TGPFontFamily;
+  lgFont: TGPFont;
+  lgStringFormat: TGPStringFormat;
+  lgPt: TGPPointF;
+  lgRectF: TGPRectF;
+  lgTextRect: TRect;
+  lgX, lgY, lgW, lgH, lgBarX, lgBarY, lgBarW, lgBarH: Integer;
 begin
   if BBRelFile = nil then
     BBRelFile := TMemoryStream.Create;
 
+  BBRelBmp.Canvas.Brush.Color := clWhite;
   BBRelBmp.Canvas.FillRect(BBRelBmp.Canvas.ClipRect);
-  BBRelBmp.Canvas.FloodFill(10, 10, ClWhite, fsBorder);
+  BBRelBmp.Canvas.FloodFill(10, 10, clWhite, fsBorder);
   if BBRelFileName <> filename then
   begin
     BBRelFile.LoadFromFile(filename);
@@ -7254,24 +7477,6 @@ begin
           miz[u.section] := round(u.dz);
           MidPU[u.section] := true;
           rev[u.section] := u.reverse_data;
-          if CheckBox1.Checked then
-          begin
-            BBRelBmp.Canvas.Brush.Color := Clskyblue;
-            if Form1.ComboBox1.ItemIndex > 0 then
-              if l = strtoint(Form1.ComboBox1.Items.Strings[Form1.ComboBox1.ItemIndex]) then
-                BBRelBmp.Canvas.Brush.Color := $00FF80FF;
-            BBRelBmp.Canvas.Chord(MidP[u.section].x + mmx + round((-60 + mpx) / Zoom),
-              MidP[u.section].y + mmy + round((-60 + mpy) / Zoom), MidP[u.section].x + mmx + round((60 + mpx) / Zoom),
-              MidP[u.section].y + mmy + round((60 + mpy) / Zoom),
-
-              MidP[u.section].x + mmx + round((60 + mpx) / Zoom), MidP[u.section].y + mmy + round((-60 + mpy) / Zoom),
-              MidP[u.section].x + mmx + round((60 + mpx) / Zoom), MidP[u.section].y + mmy + round((-60 + mpy) / Zoom));
-
-            BBRelBmp.Canvas.Font.size := round(40 / Zoom);
-            BBRelBmp.Canvas.TextOut(MidP[u.section].x + mmx + round((-40 + mpx) / Zoom),
-              MidP[u.section].y + mmy + round((-40 + mpy) / Zoom), inttostr(u.section));
-            BBRelBmp.Canvas.Font.size := 8;
-          end;
         end;
       end;
       Form1.ComboBox1.ItemIndex := 0; // default auto
@@ -7293,27 +7498,6 @@ begin
       begin
         MidP[l].x := round(midpz[l].x / Zoom);
         MidP[l].y := round(midpz[l].y / Zoom);
-
-        if CheckBox1.Checked then
-        begin
-          BBRelBmp.Canvas.Brush.Color := Clskyblue;
-          if Form1.ComboBox1.ItemIndex > 0 then
-            if l = strtoint(Form1.ComboBox1.Items.Strings[Form1.ComboBox1.ItemIndex]) then
-              BBRelBmp.Canvas.Brush.Color := $00FF80FF;
-          BBRelBmp.Canvas.Chord(MidP[l].x + mmx + round((-60 + mpx) / Zoom),
-            MidP[l].y + mmy + round((-60 + mpy) / Zoom), MidP[l].x + mmx + round((60 + mpx) / Zoom),
-            MidP[l].y + mmy + round((60 + mpy) / Zoom),
-
-            MidP[l].x + mmx + round((60 + mpx) / Zoom), MidP[l].y + mmy + round((-60 + mpy) / Zoom),
-            MidP[l].x + mmx + round((60 + mpx) / Zoom), MidP[l].y + mmy + round((-60 + mpy) / Zoom));
-
-          // BBRelBmp.Canvas.FloodFill(midp[l].x+197+round(mpx / zoom),midp[l].Y+116+round(mpy / zoom),Clskyblue,fsBorder	);
-          BBRelBmp.Canvas.Font.size := round(40 / Zoom);
-          BBRelBmp.Canvas.TextOut(MidP[l].x + mmx + round((-40 + mpx) / Zoom),
-            MidP[l].y + mmy + round((-40 + mpy) / Zoom), inttostr(l));
-          BBRelBmp.Canvas.Font.size := 8;
-        end;
-
       end;
 
   end;
@@ -7333,6 +7517,58 @@ begin
     l := 1;
     ll := 0;
     col := $101010;
+    // Raw mode: set up GDI+ graphics + pens once, reused for every triangle
+    gpRawGraphics := nil;
+    gpPenBlue := nil; gpPenGreen := nil; gpPenGray := nil; gpPenDefault := nil;
+    topoInteriorPen := nil;
+    if mapRenderMode = 0 then
+    begin
+      gpRawGraphics := TGPGraphics.Create(BBRelBmp.Canvas.Handle);
+      gpRawGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
+      gpRawGraphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+      gpPenBlue := TGPPen.Create(MakeColor(255, 0, 0, 255), 1);
+      gpPenGreen := TGPPen.Create(MakeColor(255, 127, 255, 127), 1);
+      if darkmode then
+      begin
+        gpPenGray := TGPPen.Create(MakeColor(255, 135, 135, 135), 1);
+        gpPenDefault := TGPPen.Create(MakeColor(255, 200, 200, 200), 1);
+      end
+      else
+      begin
+        gpPenGray := TGPPen.Create(MakeColor(255, 153, 153, 153), 1);
+        gpPenDefault := TGPPen.Create(MakeColor(255, 0, 0, 0), 1);
+      end;
+    end;
+
+    // Topographic cache: if filename unchanged, reuse prior world-space contours + interior edges
+    interiorCount := 0;
+    SetLength(interiorPts, 0);
+    if (mapRenderMode = 1) and (cachedOutlineFor = filename) and (cachedOutlineCount > 0) then
+    begin
+      contoursCount := cachedOutlineCount;
+      contoursPts := Copy(cachedOutlineContours, 0, cachedOutlineCount);
+      contoursAvgY := Copy(cachedOutlineAvgY, 0, cachedOutlineCount);
+      contoursParent := Copy(cachedOutlineParent, 0, cachedOutlineCount);
+      contoursDepth := Copy(cachedOutlineDepth, 0, cachedOutlineCount);
+      contMinY := cachedOutlineMinY;
+      contMaxY := cachedOutlineMaxY;
+      interiorCount := cachedOutlineInteriorCount;
+      // Each interior edge stores 2 endpoints (start + end), so the cached
+      // point array length is 2x the edge count. Restoring only N items
+      // instead of N*2 left the back half of the rebuilt interiorPts as
+      // out-of-bounds reads, which produced random "radial lines" through
+      // the floor every cache hit (i.e. every redraw after the first frame).
+      interiorPts := Copy(cachedOutlineInterior, 0, cachedOutlineInteriorCount * 2);
+      l := 0; // skip outer while loop
+    end
+    else
+    begin
+      contoursCount := 0;
+      SetLength(contoursPts, 0);
+      SetLength(contoursAvgY, 0);
+      contMinY := 1e30;
+      contMaxY := -1e30;
+    end;
     while l = 1 do
     begin
       BBRelFile.read(r, 4);
@@ -7347,11 +7583,168 @@ begin
 
         BBRelFile.Seek(t, 0);
         BBRelFile.read(tmppoint, r2 - t); // read point table
+
+        // Mode 1: floor-contour outline — trace boundary edges into closed polygons, fill + stroke
+        if mapRenderMode = 1 then
+        begin
+          SetLength(outlineEdgeArr, 3 * y);
+          outlineEdgeCount := 0;
+          outlineRemY := y;
+          while outlineRemY > 0 do
+          begin
+            BBRelFile.read(outlineLpt, 8);
+            BBRelFile.read(outlineLnX, 4);
+            BBRelFile.read(outlineLnY, 4);
+            BBRelFile.Seek(20, 1);
+            if ((outlineLpt[3] and 1 = 1) or (outlineLpt[3] and 16 = 16) or (outlineLpt[3] and 64 = 64))
+              and (outlineLnY >= 0.2588) then
+            begin
+              for outlineEi := 0 to 2 do
+              begin
+                outlineVa := outlineLpt[outlineEi];
+                outlineVb := outlineLpt[(outlineEi + 1) mod 3];
+                if outlineVa > outlineVb then
+                begin
+                  outlineTmp := outlineVa;
+                  outlineVa := outlineVb;
+                  outlineVb := outlineTmp;
+                end;
+                outlineEdgeArr[outlineEdgeCount] := Int64(outlineVa) shl 16 or Int64(outlineVb);
+                inc(outlineEdgeCount);
+              end;
+            end;
+            dec(outlineRemY);
+          end;
+          TArray.Sort<Int64>(outlineEdgeArr, TComparer<Int64>.Default, 0, outlineEdgeCount);
+
+          // Classify edges: singleton -> boundary (room frame, traced into contours);
+          // duplicate -> interior (shared between two triangles, drawn as fine triangulation).
+          SetLength(boundaryEdges, outlineEdgeCount);
+          boundaryCount := 0;
+          // Reserve interior buffer in this section: at most outlineEdgeCount/2 interior edges
+          if Length(interiorPts) < (interiorCount + outlineEdgeCount) * 2 then
+            SetLength(interiorPts, (interiorCount + outlineEdgeCount) * 2);
+          outlineTi := 0;
+          while outlineTi < outlineEdgeCount do
+          begin
+            outlineEk := outlineEdgeArr[outlineTi];
+            if (outlineTi + 1 < outlineEdgeCount) and (outlineEdgeArr[outlineTi + 1] = outlineEk) then
+            begin
+              // Interior edge — record once in world-XZ, then skip all duplicates of this key
+              interiorVa := word(outlineEk shr 16);
+              interiorVb := word(outlineEk and $FFFF);
+              interiorPts[interiorCount * 2].X := tmppoint[interiorVa][0];
+              interiorPts[interiorCount * 2].Y := tmppoint[interiorVa][2];
+              interiorPts[interiorCount * 2 + 1].X := tmppoint[interiorVb][0];
+              interiorPts[interiorCount * 2 + 1].Y := tmppoint[interiorVb][2];
+              Inc(interiorCount);
+              while (outlineTi < outlineEdgeCount) and (outlineEdgeArr[outlineTi] = outlineEk) do
+                inc(outlineTi);
+            end
+            else
+            begin
+              boundaryEdges[boundaryCount].a := word(outlineEk shr 16);
+              boundaryEdges[boundaryCount].b := word(outlineEk and $FFFF);
+              boundaryEdges[boundaryCount].used := false;
+              inc(boundaryCount);
+              inc(outlineTi);
+            end;
+          end;
+
+          // Build vertex -> boundary-edge adjacency
+          vertAdj := TDictionary<word, TList<integer>>.Create;
+          try
+            for outlineEi := 0 to boundaryCount - 1 do
+            begin
+              if not vertAdj.TryGetValue(boundaryEdges[outlineEi].a, adjList) then
+              begin
+                adjList := TList<integer>.Create;
+                vertAdj.Add(boundaryEdges[outlineEi].a, adjList);
+              end;
+              adjList.Add(outlineEi);
+              if not vertAdj.TryGetValue(boundaryEdges[outlineEi].b, adjList) then
+              begin
+                adjList := TList<integer>.Create;
+                vertAdj.Add(boundaryEdges[outlineEi].b, adjList);
+              end;
+              adjList.Add(outlineEi);
+            end;
+
+            // Walk each contour loop starting from any unused edge; append to global list
+            for seedEi := 0 to boundaryCount - 1 do
+            begin
+              if boundaryEdges[seedEi].used then continue;
+              SetLength(contourPts, 64);
+              contourLen := 0;
+              sumY := 0;
+              vCount := 0;
+              startV := boundaryEdges[seedEi].a;
+              curV := startV;
+              nextV := boundaryEdges[seedEi].b;
+              boundaryEdges[seedEi].used := true;
+
+              contourPts[contourLen].X := tmppoint[curV][0];
+              contourPts[contourLen].Y := tmppoint[curV][2];
+              sumY := sumY + tmppoint[curV][1];
+              inc(vCount);
+              inc(contourLen);
+
+              repeat
+                if contourLen >= Length(contourPts) then
+                  SetLength(contourPts, Length(contourPts) * 2);
+                contourPts[contourLen].X := tmppoint[nextV][0];
+                contourPts[contourLen].Y := tmppoint[nextV][2];
+                sumY := sumY + tmppoint[nextV][1];
+                inc(vCount);
+                inc(contourLen);
+
+                curV := nextV;
+                if curV = startV then break;
+                foundNext := false;
+                if vertAdj.TryGetValue(curV, adjList) then
+                begin
+                  for adjIdx := 0 to adjList.Count - 1 do
+                  begin
+                    adjEi := adjList[adjIdx];
+                    if boundaryEdges[adjEi].used then continue;
+                    if boundaryEdges[adjEi].a = curV then
+                      nextV := boundaryEdges[adjEi].b
+                    else
+                      nextV := boundaryEdges[adjEi].a;
+                    boundaryEdges[adjEi].used := true;
+                    foundNext := true;
+                    break;
+                  end;
+                end;
+              until not foundNext;
+
+              if contourLen >= 3 then
+              begin
+                SetLength(contourPts, contourLen);
+                SetLength(contoursPts, contoursCount + 1);
+                SetLength(contoursAvgY, contoursCount + 1);
+                contoursPts[contoursCount] := Copy(contourPts, 0, contourLen);
+                contoursAvgY[contoursCount] := sumY / vCount;
+                if contoursAvgY[contoursCount] < contMinY then contMinY := contoursAvgY[contoursCount];
+                if contoursAvgY[contoursCount] > contMaxY then contMaxY := contoursAvgY[contoursCount];
+                inc(contoursCount);
+              end;
+            end;
+
+          finally
+            for adjList in vertAdj.Values do
+              adjList.Free;
+            vertAdj.Free;
+          end;
+
+          y := 0; // skip main loop for this block
+        end;
+
         While y > 0 do
         begin
           BBRelFile.read(pt, 8);
-          // put in the z maping
-          // if (pt[3] and 64 = 64) or (pt[3] and 1 = 1) then // and (pt[3] and $8000 = 0)then     //1 = top+floor  32 = wall
+          BBRelFile.Seek(28, 1); // raw mode: skip normal + padding
+
           if ((round((tmppoint[pt[0]][0] + mpx) / Zoom) >= -mmx) and (round((tmppoint[pt[0]][0] + mpx) / Zoom) <= mmx +
             1) and (round((tmppoint[pt[0]][2] + mpy) / Zoom) >= -mmy) and
             (round((tmppoint[pt[0]][2] + mpy) / Zoom) <= mmy + 1)) or
@@ -7364,46 +7757,31 @@ begin
             1) and (round((tmppoint[pt[2]][2] + mpy) / Zoom) >= -mmy) and
             (round((tmppoint[pt[2]][2] + mpy) / Zoom) <= mmy + 1)) then
           begin
-            // get other point
             rel1[0] := tmppoint[pt[0]][0];
             rel1[2] := tmppoint[pt[0]][2];
             rel[0] := tmppoint[pt[1]][0];
             rel[2] := tmppoint[pt[1]][2];
 
-            // BBRelBmp.Canvas.Pen.Color:=130+(round(tmppoint[pt[0]][1])*2);
             if (pt[3] and 64 = 64) then
-              BBRelBmp.Canvas.Pen.Color := ClBlue
+              curPen := gpPenBlue
             else if (pt[3] and 16 = 16) then
-              BBRelBmp.Canvas.Pen.Color := $7FFF7F
+              curPen := gpPenGreen
             else if (pt[3] and 1 = 1) then
-            begin
-              if darkmode then
-                BBRelBmp.Canvas.Pen.Color := RGB(135,135,135)
-              else
-                BBRelBmp.Canvas.Pen.Color := $999999 // $90D517//$77AD19
-            end
+              curPen := gpPenGray
             else
-            begin
-              if darkmode then
-                BBRelBmp.Canvas.Pen.Color := RGB(200,200,200)
-              else
-                BBRelBmp.Canvas.Pen.Color := clblack;
-            end;
+              curPen := gpPenDefault;
 
-            tpt[0].x := round((rel1[0] + mpx) / Zoom) + mmx;
-            tpt[0].y := round((rel1[2] + mpy) / Zoom) + mmy;
-
-            tpt[1].x := round((rel[0] + mpx) / Zoom) + mmx;
-            tpt[1].y := round((rel[2] + mpy) / Zoom) + mmy;
+            gpTrianglePts[0].X := (rel1[0] + mpx) / Zoom + mmx;
+            gpTrianglePts[0].Y := (rel1[2] + mpy) / Zoom + mmy;
+            gpTrianglePts[1].X := (rel[0] + mpx) / Zoom + mmx;
+            gpTrianglePts[1].Y := (rel[2] + mpy) / Zoom + mmy;
             rel[0] := tmppoint[pt[2]][0];
             rel[2] := tmppoint[pt[2]][2];
-            tpt[2].x := round((rel[0] + mpx) / Zoom) + mmx;
-            tpt[2].y := round((rel[2] + mpy) / Zoom) + mmy;
-            tpt[3] := tpt[0];
-            BBRelBmp.Canvas.Polyline(tpt);
+            gpTrianglePts[2].X := (rel[0] + mpx) / Zoom + mmx;
+            gpTrianglePts[2].Y := (rel[2] + mpy) / Zoom + mmy;
+            gpRawGraphics.DrawPolygon(curPen, PGPPointF(@gpTrianglePts[0]), 3);
           end;
 
-          BBRelFile.Seek(28, 1);
           dec(y);
         end;
         BBRelFile.Seek(tab, 0);
@@ -7416,6 +7794,380 @@ begin
       // inc(sec);
     end;
     // deletedc(hd);
+
+    // Tear down raw-mode GDI+ state (topographic mode creates its own TGPGraphics later)
+    if mapRenderMode = 0 then
+    begin
+      if gpPenBlue <> nil then gpPenBlue.Free;
+      if gpPenGreen <> nil then gpPenGreen.Free;
+      if gpPenGray <> nil then gpPenGray.Free;
+      if gpPenDefault <> nil then gpPenDefault.Free;
+      if gpRawGraphics <> nil then gpRawGraphics.Free;
+    end;
+
+    // Cache miss path: compute nesting topology once on world-space contours, then persist
+    if (mapRenderMode = 1) and (contoursCount > 0) and (cachedOutlineFor <> filename) then
+    begin
+      SetLength(contoursCentroid, contoursCount);
+      SetLength(contoursArea, contoursCount);
+      for cIdx := 0 to contoursCount - 1 do
+      begin
+        contoursCentroid[cIdx] := PolygonCentroid(contoursPts[cIdx]);
+        contoursArea[cIdx] := Abs(PolygonSignedArea(contoursPts[cIdx]));
+      end;
+
+      SetLength(contoursParent, contoursCount);
+      for cIdx := 0 to contoursCount - 1 do
+      begin
+        bestParent := -1;
+        bestParentArea := 1e30;
+        for pIdx := 0 to contoursCount - 1 do
+        begin
+          if pIdx = cIdx then Continue;
+          if contoursArea[pIdx] <= contoursArea[cIdx] then Continue;
+          if PointInPolygon(contoursCentroid[cIdx], contoursPts[pIdx]) and
+             (contoursArea[pIdx] < bestParentArea) then
+          begin
+            bestParent := pIdx;
+            bestParentArea := contoursArea[pIdx];
+          end;
+        end;
+        contoursParent[cIdx] := bestParent;
+      end;
+
+      SetLength(contoursDepth, contoursCount);
+      for cIdx := 0 to contoursCount - 1 do
+      begin
+        depthWalker := contoursParent[cIdx];
+        contoursDepth[cIdx] := 0;
+        while depthWalker >= 0 do
+        begin
+          Inc(contoursDepth[cIdx]);
+          depthWalker := contoursParent[depthWalker];
+        end;
+      end;
+
+      // One-time world-space DP simplification: cuts 30-60% of vertices, skips per-frame DP
+      for cIdx := 0 to contoursCount - 1 do
+        contoursPts[cIdx] := SimplifyContour(contoursPts[cIdx], 1.0);
+
+      cachedOutlineFor := filename;
+      cachedOutlineContours := Copy(contoursPts, 0, contoursCount);
+      cachedOutlineAvgY := Copy(contoursAvgY, 0, contoursCount);
+      cachedOutlineParent := Copy(contoursParent, 0, contoursCount);
+      cachedOutlineDepth := Copy(contoursDepth, 0, contoursCount);
+      cachedOutlineCount := contoursCount;
+      cachedOutlineMinY := contMinY;
+      cachedOutlineMaxY := contMaxY;
+      cachedOutlineInterior := Copy(interiorPts, 0, interiorCount * 2);
+      cachedOutlineInteriorCount := interiorCount;
+    end;
+
+    // Mode 1 render: project world -> screen, DP-simplify, build hole-aware paths, GDI+ render
+    if (mapRenderMode = 1) and (contoursCount > 0) then
+    begin
+      SetLength(projectedPts, contoursCount);
+      for cIdx := 0 to contoursCount - 1 do
+      begin
+        SetLength(projectedPts[cIdx], Length(contoursPts[cIdx]));
+        for projIdx := 0 to Length(contoursPts[cIdx]) - 1 do
+        begin
+          projectedPts[cIdx][projIdx].X := (contoursPts[cIdx][projIdx].X + mpx) / Zoom + mmx;
+          projectedPts[cIdx][projIdx].Y := (contoursPts[cIdx][projIdx].Y + mpy) / Zoom + mmy;
+        end;
+      end;
+
+      SetLength(contourPaths, contoursCount);
+      for cIdx := 0 to contoursCount - 1 do
+      begin
+        if (contoursDepth[cIdx] mod 2) = 0 then
+        begin
+          contourPaths[cIdx] := TGPGraphicsPath.Create(FillModeAlternate);
+          contourPaths[cIdx].AddPolygon(PGPPointF(@projectedPts[cIdx][0]), Length(projectedPts[cIdx]));
+          for pIdx := 0 to contoursCount - 1 do
+            if contoursParent[pIdx] = cIdx then
+              contourPaths[cIdx].AddPolygon(PGPPointF(@projectedPts[pIdx][0]), Length(projectedPts[pIdx]));
+        end
+        else
+          contourPaths[cIdx] := nil;
+      end;
+
+      if darkmode then
+      begin
+        // Atlas Modern, dark variant. Same hues as light, dropped to ~50%
+        // value so they read as colored on a near-black bitmap.
+        lowR := 50;  lowG := 95;  lowB := 150;
+        highR := 165; highG := 135; highB := 60;
+        strokeR := 220; strokeG := 220; strokeB := 220;
+      end
+      else
+      begin
+        // Atlas Modern palette: cool blue at low, warm sand at high.
+        // Hue pair sits near 210° / 45° on the wheel — far enough apart
+        // for clear height encoding, close to complementary so the
+        // linear-RGB midpoint lands on a natural pale-olive instead of
+        // muddy gray. Saturation kept around 50% so the floor reads as
+        // colored without competing with the brighter UI elements
+        // (yellow selection rect, pink room-ID, blue warp lines, olive
+        // range ring). Lightness ~85-90% leaves dark markers
+        // unambiguous on top.
+        lowR := 115; lowG := 170; lowB := 220;
+        highR := 235; highG := 205; highB := 115;
+        strokeR := 30; strokeG := 30; strokeB := 30;
+      end;
+      shadowOffset := outlinewidth + 1.5;
+
+      gpGraphics := TGPGraphics.Create(BBRelBmp.Canvas.Handle);
+      try
+        gpGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
+        gpGraphics.SetPixelOffsetMode(PixelOffsetModeHalf);
+
+        // Hatch pass: faint 45° diagonal lines outside floor areas (cartographic negative space)
+        combinedPath := TGPGraphicsPath.Create(FillModeAlternate);
+        try
+          for cIdx := 0 to contoursCount - 1 do
+            if contourPaths[cIdx] <> nil then
+              combinedPath.AddPath(contourPaths[cIdx], False);
+          gpGraphics.SetClip(combinedPath, CombineModeExclude);
+          hatchBrush := TGPHatchBrush.Create(HatchStyleForwardDiagonal,
+            MakeColor(32, 0, 0, 0), MakeColor(0, 0, 0, 0));
+          try
+            gpGraphics.FillRectangle(hatchBrush, 0.0, 0.0,
+              Single(BBRelBmp.Width), Single(BBRelBmp.Height));
+          finally
+            hatchBrush.Free;
+          end;
+          gpGraphics.ResetClip;
+        finally
+          combinedPath.Free;
+        end;
+
+        // Shadow pass: single wide AA stroke (soft edge) + solid fill (core)
+        gpShadowBrush := TGPSolidBrush.Create(MakeColor(55, 0, 0, 0));
+        try
+          gpGraphics.TranslateTransform(shadowOffset, shadowOffset);
+          gpPen := TGPPen.Create(MakeColor(28, 0, 0, 0), outlinewidth + 3);
+          try
+            gpPen.SetLineJoin(LineJoinRound);
+            for cIdx := 0 to contoursCount - 1 do
+              if contourPaths[cIdx] <> nil then
+                gpGraphics.DrawPath(gpPen, contourPaths[cIdx]);
+          finally
+            gpPen.Free;
+          end;
+          for cIdx := 0 to contoursCount - 1 do
+            if contourPaths[cIdx] <> nil then
+              gpGraphics.FillPath(gpShadowBrush, contourPaths[cIdx]);
+          gpGraphics.ResetTransform;
+        finally
+          gpShadowBrush.Free;
+        end;
+
+        // Fill pass: per-outer height-tinted color when shading is enabled,
+        // otherwise a single neutral cool gray for the whole floor layer.
+        for cIdx := 0 to contoursCount - 1 do
+        begin
+          if contourPaths[cIdx] = nil then Continue;
+          if topoHeightShading then
+          begin
+            if contMaxY > contMinY then
+              heightT := (contoursAvgY[cIdx] - contMinY) / (contMaxY - contMinY)
+            else
+              heightT := 0.5;
+            fillR := Byte(Round(lowR + (Integer(highR) - Integer(lowR)) * heightT));
+            fillG := Byte(Round(lowG + (Integer(highG) - Integer(lowG)) * heightT));
+            fillB := Byte(Round(lowB + (Integer(highB) - Integer(lowB)) * heightT));
+          end
+          else if darkmode then
+          begin
+            // Match the bitmap background fill (DrawMap uses RGB(18,18,18))
+            // so the floor reads as "uncolored" — only outlined by the
+            // boundary stroke, with the drop shadow still visible behind.
+            fillR := 18; fillG := 18; fillB := 18;
+          end
+          else
+          begin
+            fillR := 255; fillG := 255; fillB := 255;
+          end;
+          gpBrush := TGPSolidBrush.Create(MakeColor(255, fillR, fillG, fillB));
+          try
+            gpGraphics.FillPath(gpBrush, contourPaths[cIdx]);
+          finally
+            gpBrush.Free;
+          end;
+        end;
+
+        // Interior triangulation: shared edges between two filtered triangles, drawn
+        // as fine detail inside the fills. Single muted color (matched to stroke palette
+        // but desaturated + transparent), narrower than boundary so the room frame still wins.
+        if interiorCount > 0 then
+        begin
+          topoInteriorPen := TGPPen.Create(
+            MakeColor(95, strokeR, strokeG, strokeB), outlinewidth * 0.75);
+          try
+            for topoIeIdx := 0 to interiorCount - 1 do
+            begin
+              topoIntS1.X := (interiorPts[topoIeIdx * 2].X + mpx) / Zoom + mmx;
+              topoIntS1.Y := (interiorPts[topoIeIdx * 2].Y + mpy) / Zoom + mmy;
+              topoIntS2.X := (interiorPts[topoIeIdx * 2 + 1].X + mpx) / Zoom + mmx;
+              topoIntS2.Y := (interiorPts[topoIeIdx * 2 + 1].Y + mpy) / Zoom + mmy;
+              gpGraphics.DrawLine(topoInteriorPen, topoIntS1.X, topoIntS1.Y, topoIntS2.X, topoIntS2.Y);
+            end;
+          finally
+            topoInteriorPen.Free;
+            topoInteriorPen := nil;
+          end;
+        end;
+
+        // Boundary stroke pass — drawn last so the room frame stays crisp on top of triangulation
+        gpPen := TGPPen.Create(MakeColor(255, strokeR, strokeG, strokeB), outlinewidth);
+        try
+          gpPen.SetLineJoin(LineJoinRound);
+          for cIdx := 0 to contoursCount - 1 do
+          begin
+            if contourPaths[cIdx] = nil then Continue;
+            gpGraphics.DrawPath(gpPen, contourPaths[cIdx]);
+          end;
+        finally
+          gpPen.Free;
+        end;
+
+        // Height legend: horizontal pill — "Height:  LOW [==gradient==] HIGH"
+        // Hidden when height shading is off — a flat-fill floor has nothing
+        // to legend.
+        if topoHeightShading then
+        begin
+          lgW := 320;
+          lgH := 28;
+          lgX := BBRelBmp.Width - lgW - 16;
+          lgY := BBRelBmp.Height - lgH - 16;
+          lgBarW := 130;
+          lgBarH := 10;
+          lgBarX := lgX + 128;
+          lgBarY := lgY + (lgH - lgBarH) div 2;
+
+          lgCardPath := CreateRoundedRectPath(Single(lgX), Single(lgY), Single(lgW), Single(lgH), Single(lgH) / 2);
+          try
+            gpGraphics.TranslateTransform(0.0, 2.0);
+            lgCardShadowBrush := TGPSolidBrush.Create(MakeColor(40, 0, 0, 0));
+            try
+              gpGraphics.FillPath(lgCardShadowBrush, lgCardPath);
+            finally
+              lgCardShadowBrush.Free;
+            end;
+            gpGraphics.ResetTransform;
+
+            lgCardBrush := TGPSolidBrush.Create(MakeColor(245, 255, 255, 255));
+            try
+              gpGraphics.FillPath(lgCardBrush, lgCardPath);
+            finally
+              lgCardBrush.Free;
+            end;
+
+            lgCardPen := TGPPen.Create(MakeColor(130, 140, 140, 140), 1);
+            try
+              gpGraphics.DrawPath(lgCardPen, lgCardPath);
+            finally
+              lgCardPen.Free;
+            end;
+          finally
+            lgCardPath.Free;
+          end;
+
+          lgBarPath := CreateRoundedRectPath(Single(lgBarX), Single(lgBarY), Single(lgBarW), Single(lgBarH), Single(lgBarH) / 2);
+          try
+            lgGradBrush := TGPLinearGradientBrush.Create(
+              MakePoint(Single(lgBarX), Single(lgBarY)),
+              MakePoint(Single(lgBarX + lgBarW), Single(lgBarY)),
+              MakeColor(255, lowR, lowG, lowB),
+              MakeColor(255, highR, highG, highB));
+            try
+              gpGraphics.FillPath(lgGradBrush, lgBarPath);
+            finally
+              lgGradBrush.Free;
+            end;
+
+            lgBarPen := TGPPen.Create(MakeColor(140, 80, 80, 80), 1);
+            try
+              gpGraphics.DrawPath(lgBarPen, lgBarPath);
+            finally
+              lgBarPen.Free;
+            end;
+          finally
+            lgBarPath.Free;
+          end;
+        end;
+
+      finally
+        gpGraphics.Free;
+        for cIdx := 0 to contoursCount - 1 do
+          if contourPaths[cIdx] <> nil then contourPaths[cIdx].Free;
+      end;
+
+      if topoHeightShading then
+      begin
+        // Legend labels via GDI Canvas (reliable across system font configs)
+        BBRelBmp.Canvas.Brush.Style := bsClear;
+
+        // Title "Height:" on the left
+        BBRelBmp.Canvas.Font.Name := 'Segoe UI';
+        BBRelBmp.Canvas.Font.Size := 9;
+        BBRelBmp.Canvas.Font.Style := [fsBold];
+        BBRelBmp.Canvas.Font.Color := RGB(30, 35, 45);
+        lgTextRect := Rect(lgX + 14, lgY, lgX + 78, lgY + lgH);
+        DrawText(BBRelBmp.Canvas.Handle, 'Height:', 7, lgTextRect,
+          DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+
+        // LOW / HIGH small labels flanking the bar
+        BBRelBmp.Canvas.Font.Size := 8;
+        BBRelBmp.Canvas.Font.Color := RGB(70, 75, 85);
+        lgTextRect := Rect(lgX + 82, lgY, lgBarX - 4, lgY + lgH);
+        DrawText(BBRelBmp.Canvas.Handle, 'LOW', 3, lgTextRect,
+          DT_RIGHT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+        lgTextRect := Rect(lgBarX + lgBarW + 4, lgY, lgX + lgW - 10, lgY + lgH);
+        DrawText(BBRelBmp.Canvas.Handle, 'HIGH', 4, lgTextRect,
+          DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+
+        BBRelBmp.Canvas.Brush.Style := bsSolid;
+      end;
+    end;
+
+    // Room-ID badges drawn after the floor render so topographic fills can't
+    // occlude them. Hollow ring (Ellipse + bsClear brush) instead of filled
+    // chord so the map underneath stays visible. Selected gets a bright
+    // pink ring to stand out.
+    if CheckBox1.Checked then
+    begin
+      if darkmode then
+        BBRelBmp.Canvas.Font.Color := RGB(220, 220, 220)
+      else
+        BBRelBmp.Canvas.Font.Color := clBlack;
+      BBRelBmp.Canvas.Brush.Style := bsClear;
+      BBRelBmp.Canvas.Pen.Width := 2;
+      for l := 0 to 999 do
+        if MidPU[l] then
+        begin
+          if (Form1.ComboBox1.ItemIndex > 0) and
+             (l = strtoint(Form1.ComboBox1.Items.Strings[Form1.ComboBox1.ItemIndex])) then
+            BBRelBmp.Canvas.Pen.Color := $00FF80FF
+          else if darkmode then
+            BBRelBmp.Canvas.Pen.Color := RGB(220, 220, 220)
+          else
+            BBRelBmp.Canvas.Pen.Color := clBlack;
+          BBRelBmp.Canvas.Ellipse(
+            MidP[l].x + mmx + round((-60 + mpx) / Zoom),
+            MidP[l].y + mmy + round((-60 + mpy) / Zoom),
+            MidP[l].x + mmx + round((60 + mpx) / Zoom),
+            MidP[l].y + mmy + round((60 + mpy) / Zoom));
+
+          BBRelBmp.Canvas.Font.Size := round(40 / Zoom);
+          BBRelBmp.Canvas.TextOut(MidP[l].x + mmx + round((-40 + mpx) / Zoom),
+            MidP[l].y + mmy + round((-40 + mpy) / Zoom), inttostr(l));
+          BBRelBmp.Canvas.Font.Size := 8;
+        end;
+      BBRelBmp.Canvas.Brush.Style := bsSolid;
+      BBRelBmp.Canvas.Pen.Width := 1;
+    end;
 
     BBRelBmp.Canvas.Pen.Color := 0;
     // fileclose(f);
@@ -8646,6 +9398,8 @@ begin
           thememodified := Reg.ReadBool('ThemeModified');
         if Reg.ValueExists('TETheme') then
           texttheme := Reg.ReadInteger('TETheme');
+        if Reg.ValueExists('TopCollapsed') and Reg.ReadBool('TopCollapsed') then
+          SetTopCollapsed(true);
         if DirectoryExists(path + 'Text editor\Themes') then
         begin
           with fmScriptTE do
@@ -11935,6 +12689,145 @@ end;
 procedure TForm1.Showbitmapoverlays1Click(Sender: TObject);
 begin
   showbmpclick(nil);
+end;
+
+procedure TForm1.MapRenderWireframe1Click(Sender: TObject);
+begin
+  mapRenderMode := 0;
+  MapRenderWireframe1.Checked := True;
+  MapRenderTopographic1.Checked := False;
+  // Wireframe colors triangles per-flag, not by height — Height shading
+  // has no effect here, so disable the menu item to make that explicit.
+  MapRenderHeightShading1.Enabled := False;
+  BBRelFileName := ''; // force reload
+  cachedOutlineFor := ''; cachedOutlineCount := 0;
+  DrawMap;
+end;
+
+procedure TForm1.MapRenderTopographic1Click(Sender: TObject);
+begin
+  mapRenderMode := 1;
+  MapRenderWireframe1.Checked := False;
+  MapRenderTopographic1.Checked := True;
+  MapRenderHeightShading1.Enabled := True;
+  BBRelFileName := ''; // force reload
+  cachedOutlineFor := ''; cachedOutlineCount := 0;
+  DrawMap;
+end;
+
+procedure TForm1.MapRenderHeightShading1Click(Sender: TObject);
+begin
+  topoHeightShading := not topoHeightShading;
+  MapRenderHeightShading1.Checked := topoHeightShading;
+  DrawMap;
+end;
+
+procedure TForm1.SetTopCollapsed(collapsed: Boolean);
+// Compute every position from design constants scaled by current monitor DPI.
+// No reliance on cached runtime state — robust against any prior layout.
+const
+  designShift          = 220;
+  designTopLabel4      = 228;
+  designTopLabel5      = 226;
+  designTopLabel6      = 228;
+  designTopLabel7      = 250;
+  designTopButton5     = 226;
+  designTopButton6     = 226;
+  designTopCheckBox1   = 226;
+  designTopComboBox1   = 266;
+  designTopButton9     = 302;
+  designTopButton4     = 326;
+  designTopButton3     = 356;
+  designTopButton2     = 386;
+  designTopButton1     = 410;
+  designTopBtnCollapse = 226;
+  designTopPanel2      = 244;
+  designPanel2BottomMargin = 506 - (244 + 240); // 22 px from form bottom
+var
+  panel2BottomPx, newPanel2TopPx: integer;
+  function S(designVal: integer): integer;
+  begin
+    Result := MulDiv(designVal, Self.PixelsPerInch, 96);
+  end;
+begin
+  if collapsed = topCollapsed then exit;
+
+  panel2BottomPx := ClientHeight - S(designPanel2BottomMargin);
+  if collapsed then
+    newPanel2TopPx := S(designTopPanel2 - designShift)
+  else
+    newPanel2TopPx := S(designTopPanel2);
+
+  Label2.Visible := not collapsed;
+  Label3.Visible := not collapsed;
+  PageControl1.Visible := not collapsed;
+  ListBox1.Visible := not collapsed;
+  ListBox2.Visible := not collapsed;
+  Panel1.Visible := not collapsed;
+
+  if collapsed then
+  begin
+    Label4.Top         := S(designTopLabel4      - designShift);
+    Label5.Top         := S(designTopLabel5      - designShift);
+    Label6.Top         := S(designTopLabel6      - designShift);
+    Label7.Top         := S(designTopLabel7      - designShift);
+    Button5.Top        := S(designTopButton5     - designShift);
+    Button6.Top        := S(designTopButton6     - designShift);
+    CheckBox1.Top      := S(designTopCheckBox1   - designShift);
+    ComboBox1.Top      := S(designTopComboBox1   - designShift);
+    Button9.Top        := S(designTopButton9     - designShift);
+    Button4.Top        := S(designTopButton4     - designShift);
+    Button3.Top        := S(designTopButton3     - designShift);
+    Button2.Top        := S(designTopButton2     - designShift);
+    Button1.Top        := S(designTopButton1     - designShift);
+    btnCollapseTop.Top := S(designTopBtnCollapse - designShift);
+  end
+  else
+  begin
+    Label4.Top         := S(designTopLabel4);
+    Label5.Top         := S(designTopLabel5);
+    Label6.Top         := S(designTopLabel6);
+    Label7.Top         := S(designTopLabel7);
+    Button5.Top        := S(designTopButton5);
+    Button6.Top        := S(designTopButton6);
+    CheckBox1.Top      := S(designTopCheckBox1);
+    ComboBox1.Top      := S(designTopComboBox1);
+    Button9.Top        := S(designTopButton9);
+    Button4.Top        := S(designTopButton4);
+    Button3.Top        := S(designTopButton3);
+    Button2.Top        := S(designTopButton2);
+    Button1.Top        := S(designTopButton1);
+    btnCollapseTop.Top := S(designTopBtnCollapse);
+  end;
+
+  Panel2.SetBounds(Panel2.Left, newPanel2TopPx,
+                   Panel2.Width, panel2BottomPx - newPanel2TopPx);
+
+  topCollapsed := collapsed;
+  if collapsed then
+    btnCollapseTop.Caption := #9660 // black down arrow — click to expand
+  else
+    btnCollapseTop.Caption := #9650; // black up arrow — click to collapse
+
+  DrawMap;
+end;
+
+procedure TForm1.btnCollapseTopClick(Sender: TObject);
+var
+  Reg: TRegistry;
+begin
+  SetTopCollapsed(not topCollapsed);
+  Reg := TRegistry.Create;
+  try
+    Reg.RootKey := HKEY_CURRENT_USER;
+    if Reg.OpenKey('\Software\Microsoft\schthack\qedit', true) then
+    begin
+      Reg.WriteBool('TopCollapsed', topCollapsed);
+      Reg.CloseKey;
+    end;
+  finally
+    Reg.Free;
+  end;
 end;
 
 procedure TForm1.showbmpClick(Sender: TObject);

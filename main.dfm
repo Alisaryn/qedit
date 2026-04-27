@@ -38,7 +38,7 @@ object Form1: TForm1
     Caption = 'Object : '
   end
   object Label4: TLabel
-    Left = 192
+    Left = 215
     Top = 228
     Width = 52
     Height = 13
@@ -52,12 +52,17 @@ object Form1: TForm1
     Anchors = [akTop, akRight]
     Caption = 'Zoom 100%'
   end
-  object Label5: TLabel
+  object Label5: TPanel
     Left = 384
-    Top = 228
-    Width = 6
-    Height = 13
+    Top = 226
+    Width = 220
+    Height = 17
+    Alignment = taLeftJustify
+    BevelOuter = bvNone
     Caption = '--'
+    ParentBackground = False
+    TabOrder = 18
+    TabStop = False
     OnMouseUp = Label5MouseUp
   end
   object Label7: TLabel
@@ -376,13 +381,28 @@ object Form1: TForm1
     OnClick = Button9Click
   end
   object CheckBox1: TCheckBox
-    Left = 252
+    Left = 275
     Top = 226
-    Width = 129
+    Width = 109
     Height = 17
     Caption = 'Show room ID'
     TabOrder = 13
     OnClick = CheckBox1Click
+  end
+  object btnCollapseTop: TButton
+    Left = 192
+    Top = 226
+    Width = 17
+    Height = 17
+    Caption = #9650
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 19
+    OnClick = btnCollapseTopClick
   end
   object Button11: TButton
     Left = 591
@@ -665,6 +685,28 @@ object Form1: TForm1
           Caption = 'Grid'
           RadioItem = True
           OnClick = Grids1Click
+        end
+      end
+      object MapRenderMode1: TMenuItem
+        Caption = 'Map render mode'
+        object MapRenderWireframe1: TMenuItem
+          Caption = 'Wireframe'
+          Checked = True
+          RadioItem = True
+          OnClick = MapRenderWireframe1Click
+        end
+        object MapRenderTopographic1: TMenuItem
+          Caption = 'Topographic'
+          RadioItem = True
+          OnClick = MapRenderTopographic1Click
+        end
+        object MapRenderShadingSep1: TMenuItem
+          Caption = '-'
+        end
+        object MapRenderHeightShading1: TMenuItem
+          Caption = 'Height shading'
+          Enabled = False
+          OnClick = MapRenderHeightShading1Click
         end
       end
       object N17: TMenuItem
