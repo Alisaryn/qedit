@@ -3,7 +3,7 @@ unit MyConst;
 interface
 
   Const
-    EnglishUIText: array[0..533] of string = (
+    EnglishUIText: array[0..538] of string = (
     'File',                                                                     // 1
     'Properties',                                                               // 2
     'Script',                                                                   // 3
@@ -57,7 +57,7 @@ interface
     'Couldn''t load map: not enough memory.',                                   // 51
     'Error while rendering monsters on map.',                                   // 52
     'Error while rendering objects on map.',                                    // 53
-    'Area',                                                                     // 54
+    'Room',                                                                     // 54
     'Save current project before quitting?',                                    // 55
     'Save current project before opening a new one?',                           // 56
     'Error while unpacking the quest.',                                         // 57
@@ -274,7 +274,7 @@ interface
     'About',                                                                    // 268
     'PSO Quest Editor by Schthack',                                             // 269
     'Supports PSO DC, PC, GC, BB',                                              // 270
-    'Credit:<cr><cr>Coder:<cr>Schthack<cr><cr>First ASM file:<cr>Myria<cr>Clara<cr><cr>ASM Update:<cr>Lee 			(over 50% of the ASM)<cr>Aleron Ives<cr>Gatten<cr>Schthack<cr><cr>Quest file format:<cr>Schthack<cr>Lee			(Challenge mode data)<cr><cr>3D map structure:<cr>Schthack<cr><cr>3D model structure:<cr>Kryslin<cr><cr>Object and Monster model research:<cr>Lee<cr>Schthack<cr>Firefox<cr><cr>Special thanks to:<cr>AleronIves<cr>Lee<cr>Firefox276<cr>for their suggestions and being very good<cr>guinea pigs<cr><cr>1.0c-2.0c updates:<cr>Alisaryn<cr>', // 271
+    'Credit:<cr><cr>Coder:<cr>Schthack<cr><cr>First ASM file:<cr>Myria<cr>Clara<cr><cr>ASM Update:<cr>Lee 			(over 50% of the ASM)<cr>Aleron Ives<cr>Gatten<cr>Schthack<cr><cr>Quest file format:<cr>Schthack<cr>Lee			(Challenge mode data)<cr><cr>3D map structure:<cr>Schthack<cr><cr>3D model structure:<cr>Kryslin<cr><cr>Object and Monster model research:<cr>Lee<cr>Schthack<cr>Firefox<cr><cr>Special thanks to:<cr>AleronIves<cr>Lee<cr>Firefox276<cr>for their suggestions and being very good<cr>guinea pigs<cr><cr>1.0c-3.0a updates:<cr>Alisaryn<cr><cr>rel_c map work:<cr>Lilyzavoqth<cr><cr>2D map changes:<cr>Warmonipa<cr>', // 271
     'Item list manager',                                                        // 272
     '3D Settings',                                                              // 273
     'Screen size:',                                                             // 274
@@ -493,8 +493,8 @@ interface
     'Auto-Y: On',                                                               // 487
     'Auto-Y: Off',                                                              // 488
     'Left arrow = Previous event,  Right arrow = Next event,  Space = Pause/Resume,  ESC = Exit',  // 489
-    'Q = Forward, A = Backward, D = Toggle data format, F = Toggle fog effect, L/R = Auto rotate', // 490
-    'Scroll = Change movement speed, S = Toggle auto section adjust, Y = Toggle auto Y adjust',    // 491
+    'Q = Forward, A = Backward, D = Toggle data format, F = Toggle fog effect, L/R = Auto-rotate', // 490
+    'Scroll = Change movement speed, S = Toggle auto-section adjust, Y = Toggle auto-Y adjust',    // 491
     'Edit: Hold click + CTRL = Move, + SHIFT = Up/down, + right-click = Rotate, CTRL + S = Snap',  // 492
     'ESC = Exit, CTRL + X = Show/hide the main window (Click outside of window to return to 3D)',  // 493
     'Round',                                                                    // 494
@@ -510,7 +510,7 @@ interface
     ' is not part of a map event on floor ',                                    // 504
     'Show icon overlays',                                                       // 505
     'Creating Bitmaps',                                                         // 506
-    'Map marker brightness',                                                    // 507
+    'Marker brightness',                                                        // 507
     'Default',                                                                  // 508
     'High',                                                                     // 509
     'Very high',                                                                // 510
@@ -537,7 +537,12 @@ interface
     ' syntax comment...',                                                       // 531
     'Hide annotations',                                                         // 532
     'Define',                                                                   // 533
-    'Annotation...'                                                             // 534
+    'Annotation...',                                                            // 534
+    'Map render mode',                                                          // 535
+    'Default (Wireframe)',                                                      // 536
+    'Topographic',                                                              // 537
+    'Height shading',                                                           // 538
+    'Show simplified map'                                                       // 539
   );
 
 Const FloorFog: array[0..46] of byte = (

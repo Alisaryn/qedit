@@ -1,7 +1,7 @@
 object Form1: TForm1
   Left = 195
   Top = 115
-  Caption = 'Quest Editor v2.0c Public'
+  Caption = 'Quest Editor v3.0a Public'
   ClientHeight = 506
   ClientWidth = 723
   Color = clBtnFace
@@ -38,7 +38,7 @@ object Form1: TForm1
     Caption = 'Object : '
   end
   object Label4: TLabel
-    Left = 192
+    Left = 215
     Top = 228
     Width = 52
     Height = 13
@@ -51,14 +51,6 @@ object Form1: TForm1
     Height = 13
     Anchors = [akTop, akRight]
     Caption = 'Zoom 100%'
-  end
-  object Label5: TLabel
-    Left = 384
-    Top = 228
-    Width = 6
-    Height = 13
-    Caption = '--'
-    OnMouseUp = Label5MouseUp
   end
   object Label7: TLabel
     Left = 591
@@ -122,6 +114,18 @@ object Form1: TForm1
       'w'
     Visible = False
     ExplicitTop = 464
+  end
+  object Label5: TPanel
+    Left = 384
+    Top = 226
+    Width = 220
+    Height = 17
+    Alignment = taLeftJustify
+    BevelOuter = bvNone
+    Caption = '--'
+    ParentBackground = False
+    TabOrder = 18
+    OnMouseUp = Label5MouseUp
   end
   object GroupBox1: TGroupBox
     Left = 0
@@ -376,13 +380,28 @@ object Form1: TForm1
     OnClick = Button9Click
   end
   object CheckBox1: TCheckBox
-    Left = 252
+    Left = 275
     Top = 226
-    Width = 129
+    Width = 109
     Height = 17
     Caption = 'Show room ID'
     TabOrder = 13
     OnClick = CheckBox1Click
+  end
+  object btnCollapseTop: TButton
+    Left = 192
+    Top = 225
+    Width = 17
+    Height = 17
+    Caption = #9650
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 17
+    OnClick = btnCollapseTopClick
   end
   object Button11: TButton
     Left = 591
@@ -907,6 +926,26 @@ object Form1: TForm1
         Caption = 'Look At'
         ShortCut = 32833
         OnClick = LookAt2Click
+      end
+      object Cleanmap2: TMenuItem
+        Caption = 'Clean map'
+        ShortCut = 117
+        OnClick = Cleanmap2Click
+      end
+      object Wireframe1: TMenuItem
+        Caption = 'Wireframe'
+        ShortCut = 118
+        OnClick = Wireframe1Click
+      end
+      object opographic1: TMenuItem
+        Caption = 'Topographic'
+        ShortCut = 119
+        OnClick = opographic1Click
+      end
+      object Heightshading1: TMenuItem
+        Caption = 'Height shading'
+        ShortCut = 8311
+        OnClick = Heightshading1Click
       end
     end
   end
@@ -1981,6 +2020,39 @@ object Form1: TForm1
         OnClick = showbmpClick
       end
       object N15: TMenuItem
+        Caption = '-'
+      end
+      object Cleanmap1: TMenuItem
+        Caption = 'Show clean map'
+        ShortCut = 117
+        OnClick = Cleanmap1Click
+      end
+      object Maprendermode1: TMenuItem
+        Caption = 'Map render mode'
+        object MapRenderWireframe1: TMenuItem
+          Caption = 'Wireframe'
+          Checked = True
+          RadioItem = True
+          ShortCut = 118
+          OnClick = MapRenderWireframe1Click
+        end
+        object MapRenderTopographic1: TMenuItem
+          Caption = 'Topographic'
+          RadioItem = True
+          ShortCut = 119
+          OnClick = MapRenderTopographic1Click
+        end
+        object N19: TMenuItem
+          Caption = '-'
+        end
+        object MapRenderHeightShading1: TMenuItem
+          Caption = 'Height shading'
+          Enabled = False
+          ShortCut = 8311
+          OnClick = MapRenderHeightShading1Click
+        end
+      end
+      object N20: TMenuItem
         Caption = '-'
       end
       object Markerbrightness1: TMenuItem
