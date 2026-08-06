@@ -39,6 +39,7 @@
 *.rsm
 *.tds
 *.dcu
+*.err
 *.lib
 *.a
 *.o

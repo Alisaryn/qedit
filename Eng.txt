@@ -51,7 +51,7 @@ Loading map...
 Couldn't load map: not enough memory.
 Error while rendering monsters on map.
 Error while rendering objects on map.
-Area
+Room
 Save current project before quitting?
 Save current project before opening a new one?
 Error while unpacking the quest.

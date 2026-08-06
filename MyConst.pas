@@ -57,7 +57,7 @@ interface
     'Couldn''t load map: not enough memory.',                                   // 51
     'Error while rendering monsters on map.',                                   // 52
     'Error while rendering objects on map.',                                    // 53
-    'Area',                                                                     // 54
+    'Room',                                                                     // 54
     'Save current project before quitting?',                                    // 55
     'Save current project before opening a new one?',                           // 56
     'Error while unpacking the quest.',                                         // 57

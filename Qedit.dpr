@@ -111,6 +111,7 @@ begin
     if fileexists(extractfilepath(application.ExeName)+'_qedit.exe') then begin
         while not deletefile(pchar(extractfilepath(application.ExeName)+'_qedit.exe')) do sleep(100);
     end;
+  path := AnsiString(ExtractFilePath(Application.ExeName));
   LoadStyleFromRegistry;
   Application.Initialize;
   Application.CreateForm(TForm1, Form1);
