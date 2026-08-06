@@ -828,6 +828,8 @@ var
   cachedOutlineFor: ansistring = '';
   cachedOutlineContours: TArray<TArray<TGPPointF>>;   // world-space XZ per contour
   cachedOutlineAvgY: TArray<Single>;
+  cachedOutlineBlock: TArray<Integer>;
+  cachedOutlineComponent: TArray<Integer>;
   cachedOutlineParent: TArray<Integer>;
   cachedOutlineDepth: TArray<Integer>;
   cachedOutlineCount: Integer = 0;
@@ -7294,34 +7296,6 @@ begin
   Result := Result * 0.5;
 end;
 
-function PolygonCentroid(const pts: TArray<TGPPointF>): TGPPointF;
-var
-  i, n: Integer;
-  cx, cy, a, cross: Double;
-begin
-  n := Length(pts);
-  if n = 0 then
-  begin
-    Result.X := 0; Result.Y := 0; Exit;
-  end;
-  cx := 0; cy := 0; a := 0;
-  for i := 0 to n - 1 do
-  begin
-    cross := pts[i].X * pts[(i + 1) mod n].Y - pts[(i + 1) mod n].X * pts[i].Y;
-    cx := cx + (pts[i].X + pts[(i + 1) mod n].X) * cross;
-    cy := cy + (pts[i].Y + pts[(i + 1) mod n].Y) * cross;
-    a := a + cross;
-  end;
-  if Abs(a) < 1e-9 then
-  begin
-    Result.X := pts[0].X;
-    Result.Y := pts[0].Y;
-    Exit;
-  end;
-  Result.X := Single(cx / (3 * a));
-  Result.Y := Single(cy / (3 * a));
-end;
-
 function CreateRoundedRectPath(x, y, w, h, r: Single): TGPGraphicsPath;
 begin
   Result := TGPGraphicsPath.Create;
@@ -7353,6 +7327,71 @@ begin
   Result := inside;
 end;
 
+function PointOnSegment(const p, a, b: TGPPointF): Boolean;
+const
+  Epsilon = 0.001;
+var
+  cross: Double;
+begin
+  cross := (b.X - a.X) * (p.Y - a.Y) - (b.Y - a.Y) * (p.X - a.X);
+  Result := (Abs(cross) <= Epsilon) and
+            (p.X >= Min(a.X, b.X) - Epsilon) and
+            (p.X <= Max(a.X, b.X) + Epsilon) and
+            (p.Y >= Min(a.Y, b.Y) - Epsilon) and
+            (p.Y <= Max(a.Y, b.Y) + Epsilon);
+end;
+
+function SegmentsIntersect(const a1, a2, b1, b2: TGPPointF): Boolean;
+const
+  Epsilon = 0.001;
+var
+  d1, d2, d3, d4: Double;
+begin
+  d1 := (a2.X - a1.X) * (b1.Y - a1.Y) - (a2.Y - a1.Y) * (b1.X - a1.X);
+  d2 := (a2.X - a1.X) * (b2.Y - a1.Y) - (a2.Y - a1.Y) * (b2.X - a1.X);
+  d3 := (b2.X - b1.X) * (a1.Y - b1.Y) - (b2.Y - b1.Y) * (a1.X - b1.X);
+  d4 := (b2.X - b1.X) * (a2.Y - b1.Y) - (b2.Y - b1.Y) * (a2.X - b1.X);
+
+  Result := (((d1 > Epsilon) and (d2 < -Epsilon)) or
+             ((d1 < -Epsilon) and (d2 > Epsilon))) and
+            (((d3 > Epsilon) and (d4 < -Epsilon)) or
+             ((d3 < -Epsilon) and (d4 > Epsilon)));
+  if Result then Exit;
+
+  Result := ((Abs(d1) <= Epsilon) and PointOnSegment(b1, a1, a2)) or
+            ((Abs(d2) <= Epsilon) and PointOnSegment(b2, a1, a2)) or
+            ((Abs(d3) <= Epsilon) and PointOnSegment(a1, b1, b2)) or
+            ((Abs(d4) <= Epsilon) and PointOnSegment(a2, b1, b2));
+end;
+
+function PolygonStrictlyContains(const outerPts, innerPts: TArray<TGPPointF>): Boolean;
+var
+  outerIdx, innerIdx: Integer;
+begin
+  Result := False;
+  if (Length(outerPts) < 3) or (Length(innerPts) < 3) then Exit;
+
+  // Every child vertex must be strictly inside. A centroid alone is not a
+  // containment proof for concave or partially overlapping contours.
+  for innerIdx := 0 to Length(innerPts) - 1 do
+  begin
+    for outerIdx := 0 to Length(outerPts) - 1 do
+      if PointOnSegment(innerPts[innerIdx], outerPts[outerIdx],
+           outerPts[(outerIdx + 1) mod Length(outerPts)]) then Exit;
+    if not PointInPolygon(innerPts[innerIdx], outerPts) then Exit;
+  end;
+
+  // Concave polygons can contain every vertex while an edge crosses outside.
+  // Reject boundary crossings and touching contours as parent/child pairs.
+  for innerIdx := 0 to Length(innerPts) - 1 do
+    for outerIdx := 0 to Length(outerPts) - 1 do
+      if SegmentsIntersect(innerPts[innerIdx],
+           innerPts[(innerIdx + 1) mod Length(innerPts)],
+           outerPts[outerIdx], outerPts[(outerIdx + 1) mod Length(outerPts)]) then Exit;
+
+  Result := True;
+end;
+
 procedure TForm1.DrawBBRELFile(filename: ansistring);
 var
   rel, rel1: array [0 .. 2] of Single;
@@ -7382,6 +7421,7 @@ var
   foundNext: boolean;
   contoursPts: TArray<TArray<TGPPointF>>;
   contoursAvgY: TArray<Single>;
+  contoursBlock, contoursComponent: TArray<Integer>;
   contoursCount: integer;
   sumY: Double;
   vCount: integer;
@@ -7391,7 +7431,6 @@ var
   gpGraphics: TGPGraphics;
   gpBrush, gpShadowBrush: TGPSolidBrush;
   gpPen: TGPPen;
-  contoursCentroid: TArray<TGPPointF>;
   contoursArea: TArray<Double>;
   contoursParent: TArray<Integer>;
   contoursDepth: TArray<Integer>;
@@ -7425,13 +7464,39 @@ var
   lgRectF: TGPRectF;
   lgTextRect: TRect;
   lgX, lgY, lgW, lgH, lgBarX, lgBarY, lgBarW, lgBarH: Integer;
+  savedFont: TFont;
+  savedBrushStyle: TBrushStyle;
+  vertexParent: TArray<Integer>;
+  vertexCountLocal, outlineBlockId: Integer;
+
+  function FindVertexRoot(vertex: Integer): Integer;
+  var
+    parentVertex: Integer;
+  begin
+    Result := vertex;
+    while vertexParent[Result] <> Result do
+      Result := vertexParent[Result];
+    while vertexParent[vertex] <> vertex do
+    begin
+      parentVertex := vertexParent[vertex];
+      vertexParent[vertex] := Result;
+      vertex := parentVertex;
+    end;
+  end;
+
+  procedure UnionVertices(a, b: Integer);
+  var
+    rootA, rootB: Integer;
+  begin
+    rootA := FindVertexRoot(a);
+    rootB := FindVertexRoot(b);
+    if rootA <> rootB then
+      vertexParent[rootB] := rootA;
+  end;
 begin
   if BBRelFile = nil then
     BBRelFile := TMemoryStream.Create;
 
-  BBRelBmp.Canvas.Brush.Color := clWhite;
-  BBRelBmp.Canvas.FillRect(BBRelBmp.Canvas.ClipRect);
-  BBRelBmp.Canvas.FloodFill(10, 10, clWhite, fsBorder);
   if BBRelFileName <> filename then
   begin
     BBRelFile.LoadFromFile(filename);
@@ -7502,7 +7567,14 @@ begin
 
   end;
 
+  gpRawGraphics := nil;
+  gpPenBlue := nil;
+  gpPenGreen := nil;
+  gpPenGray := nil;
+  gpPenDefault := nil;
+  SetLength(contourPaths, 0);
   try
+    try
     t := BBRelFile.Seek(-16, 2);
     BBRelFile.read(t, 4); // find the first room entry
     BBRelFile.Seek(t, 0);
@@ -7518,8 +7590,6 @@ begin
     ll := 0;
     col := $101010;
     // Raw mode: set up GDI+ graphics + pens once, reused for every triangle
-    gpRawGraphics := nil;
-    gpPenBlue := nil; gpPenGreen := nil; gpPenGray := nil; gpPenDefault := nil;
     topoInteriorPen := nil;
     if mapRenderMode = 0 then
     begin
@@ -7548,6 +7618,8 @@ begin
       contoursCount := cachedOutlineCount;
       contoursPts := Copy(cachedOutlineContours, 0, cachedOutlineCount);
       contoursAvgY := Copy(cachedOutlineAvgY, 0, cachedOutlineCount);
+      contoursBlock := Copy(cachedOutlineBlock, 0, cachedOutlineCount);
+      contoursComponent := Copy(cachedOutlineComponent, 0, cachedOutlineCount);
       contoursParent := Copy(cachedOutlineParent, 0, cachedOutlineCount);
       contoursDepth := Copy(cachedOutlineDepth, 0, cachedOutlineCount);
       contMinY := cachedOutlineMinY;
@@ -7566,9 +7638,12 @@ begin
       contoursCount := 0;
       SetLength(contoursPts, 0);
       SetLength(contoursAvgY, 0);
+      SetLength(contoursBlock, 0);
+      SetLength(contoursComponent, 0);
       contMinY := 1e30;
       contMaxY := -1e30;
     end;
+    outlineBlockId := 0;
     while l = 1 do
     begin
       BBRelFile.read(r, 4);
@@ -7587,6 +7662,10 @@ begin
         // Mode 1: floor-contour outline — trace boundary edges into closed polygons, fill + stroke
         if mapRenderMode = 1 then
         begin
+          vertexCountLocal := (r2 - t) div SizeOf(tmppoint[0]);
+          SetLength(vertexParent, vertexCountLocal);
+          for outlineEi := 0 to vertexCountLocal - 1 do
+            vertexParent[outlineEi] := outlineEi;
           SetLength(outlineEdgeArr, 3 * y);
           outlineEdgeCount := 0;
           outlineRemY := y;
@@ -7599,6 +7678,8 @@ begin
             if ((outlineLpt[3] and 1 = 1) or (outlineLpt[3] and 16 = 16) or (outlineLpt[3] and 64 = 64))
               and (outlineLnY >= 0.2588) then
             begin
+              UnionVertices(outlineLpt[0], outlineLpt[1]);
+              UnionVertices(outlineLpt[1], outlineLpt[2]);
               for outlineEi := 0 to 2 do
               begin
                 outlineVa := outlineLpt[outlineEi];
@@ -7723,8 +7804,12 @@ begin
                 SetLength(contourPts, contourLen);
                 SetLength(contoursPts, contoursCount + 1);
                 SetLength(contoursAvgY, contoursCount + 1);
+                SetLength(contoursBlock, contoursCount + 1);
+                SetLength(contoursComponent, contoursCount + 1);
                 contoursPts[contoursCount] := Copy(contourPts, 0, contourLen);
                 contoursAvgY[contoursCount] := sumY / vCount;
+                contoursBlock[contoursCount] := outlineBlockId;
+                contoursComponent[contoursCount] := FindVertexRoot(startV);
                 if contoursAvgY[contoursCount] < contMinY then contMinY := contoursAvgY[contoursCount];
                 if contoursAvgY[contoursCount] > contMaxY then contMaxY := contoursAvgY[contoursCount];
                 inc(contoursCount);
@@ -7786,6 +7871,7 @@ begin
         end;
         BBRelFile.Seek(tab, 0);
         tab := tab + $18;
+        Inc(outlineBlockId);
 
       end
       else
@@ -7795,26 +7881,12 @@ begin
     end;
     // deletedc(hd);
 
-    // Tear down raw-mode GDI+ state (topographic mode creates its own TGPGraphics later)
-    if mapRenderMode = 0 then
-    begin
-      if gpPenBlue <> nil then gpPenBlue.Free;
-      if gpPenGreen <> nil then gpPenGreen.Free;
-      if gpPenGray <> nil then gpPenGray.Free;
-      if gpPenDefault <> nil then gpPenDefault.Free;
-      if gpRawGraphics <> nil then gpRawGraphics.Free;
-    end;
-
     // Cache miss path: compute nesting topology once on world-space contours, then persist
     if (mapRenderMode = 1) and (contoursCount > 0) and (cachedOutlineFor <> filename) then
     begin
-      SetLength(contoursCentroid, contoursCount);
       SetLength(contoursArea, contoursCount);
       for cIdx := 0 to contoursCount - 1 do
-      begin
-        contoursCentroid[cIdx] := PolygonCentroid(contoursPts[cIdx]);
         contoursArea[cIdx] := Abs(PolygonSignedArea(contoursPts[cIdx]));
-      end;
 
       SetLength(contoursParent, contoursCount);
       for cIdx := 0 to contoursCount - 1 do
@@ -7824,8 +7896,10 @@ begin
         for pIdx := 0 to contoursCount - 1 do
         begin
           if pIdx = cIdx then Continue;
+          if contoursBlock[pIdx] <> contoursBlock[cIdx] then Continue;
+          if contoursComponent[pIdx] <> contoursComponent[cIdx] then Continue;
           if contoursArea[pIdx] <= contoursArea[cIdx] then Continue;
-          if PointInPolygon(contoursCentroid[cIdx], contoursPts[pIdx]) and
+          if PolygonStrictlyContains(contoursPts[pIdx], contoursPts[cIdx]) and
              (contoursArea[pIdx] < bestParentArea) then
           begin
             bestParent := pIdx;
@@ -7854,6 +7928,8 @@ begin
       cachedOutlineFor := filename;
       cachedOutlineContours := Copy(contoursPts, 0, contoursCount);
       cachedOutlineAvgY := Copy(contoursAvgY, 0, contoursCount);
+      cachedOutlineBlock := Copy(contoursBlock, 0, contoursCount);
+      cachedOutlineComponent := Copy(contoursComponent, 0, contoursCount);
       cachedOutlineParent := Copy(contoursParent, 0, contoursCount);
       cachedOutlineDepth := Copy(contoursDepth, 0, contoursCount);
       cachedOutlineCount := contoursCount;
@@ -8100,35 +8176,40 @@ begin
 
       finally
         gpGraphics.Free;
-        for cIdx := 0 to contoursCount - 1 do
-          if contourPaths[cIdx] <> nil then contourPaths[cIdx].Free;
       end;
 
       if topoHeightShading then
       begin
-        // Legend labels via GDI Canvas (reliable across system font configs)
-        BBRelBmp.Canvas.Brush.Style := bsClear;
+        savedFont := TFont.Create;
+        savedBrushStyle := BBRelBmp.Canvas.Brush.Style;
+        try
+          savedFont.Assign(BBRelBmp.Canvas.Font);
+          // Legend labels via GDI Canvas (reliable across system font configs)
+          BBRelBmp.Canvas.Brush.Style := bsClear;
 
-        // Title "Height:" on the left
-        BBRelBmp.Canvas.Font.Name := 'Segoe UI';
-        BBRelBmp.Canvas.Font.Size := 9;
-        BBRelBmp.Canvas.Font.Style := [fsBold];
-        BBRelBmp.Canvas.Font.Color := RGB(30, 35, 45);
-        lgTextRect := Rect(lgX + 14, lgY, lgX + 78, lgY + lgH);
-        DrawText(BBRelBmp.Canvas.Handle, 'Height:', 7, lgTextRect,
-          DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+          // Title "Height:" on the left
+          BBRelBmp.Canvas.Font.Name := 'Segoe UI';
+          BBRelBmp.Canvas.Font.Size := 9;
+          BBRelBmp.Canvas.Font.Style := [fsBold];
+          BBRelBmp.Canvas.Font.Color := RGB(30, 35, 45);
+          lgTextRect := Rect(lgX + 14, lgY, lgX + 78, lgY + lgH);
+          DrawText(BBRelBmp.Canvas.Handle, 'Height:', 7, lgTextRect,
+            DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
 
-        // LOW / HIGH small labels flanking the bar
-        BBRelBmp.Canvas.Font.Size := 8;
-        BBRelBmp.Canvas.Font.Color := RGB(70, 75, 85);
-        lgTextRect := Rect(lgX + 82, lgY, lgBarX - 4, lgY + lgH);
-        DrawText(BBRelBmp.Canvas.Handle, 'LOW', 3, lgTextRect,
-          DT_RIGHT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
-        lgTextRect := Rect(lgBarX + lgBarW + 4, lgY, lgX + lgW - 10, lgY + lgH);
-        DrawText(BBRelBmp.Canvas.Handle, 'HIGH', 4, lgTextRect,
-          DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
-
-        BBRelBmp.Canvas.Brush.Style := bsSolid;
+          // LOW / HIGH small labels flanking the bar
+          BBRelBmp.Canvas.Font.Size := 8;
+          BBRelBmp.Canvas.Font.Color := RGB(70, 75, 85);
+          lgTextRect := Rect(lgX + 82, lgY, lgBarX - 4, lgY + lgH);
+          DrawText(BBRelBmp.Canvas.Handle, 'LOW', 3, lgTextRect,
+            DT_RIGHT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+          lgTextRect := Rect(lgBarX + lgBarW + 4, lgY, lgX + lgW - 10, lgY + lgH);
+          DrawText(BBRelBmp.Canvas.Handle, 'HIGH', 4, lgTextRect,
+            DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+        finally
+          BBRelBmp.Canvas.Font.Assign(savedFont);
+          BBRelBmp.Canvas.Brush.Style := savedBrushStyle;
+          savedFont.Free;
+        end;
       end;
     end;
 
@@ -8174,6 +8255,15 @@ begin
     // releasedc(Image2.Canvas.Handle,hd);
     // show the z table
 
+    finally
+      if gpPenBlue <> nil then gpPenBlue.Free;
+      if gpPenGreen <> nil then gpPenGreen.Free;
+      if gpPenGray <> nil then gpPenGray.Free;
+      if gpPenDefault <> nil then gpPenDefault.Free;
+      if gpRawGraphics <> nil then gpRawGraphics.Free;
+      for cIdx := 0 to Length(contourPaths) - 1 do
+        if contourPaths[cIdx] <> nil then contourPaths[cIdx].Free;
+    end;
   except
     MessageDlg(GetLanguageString(73), mtInformation, [mbOk], 0);
   end;

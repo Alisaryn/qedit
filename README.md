@@ -3,6 +3,28 @@
 Open the .dproj file in Delphi (tested using Delphi 12 Community Edition) and optionally install (Component -> Install packages -> Add) the Designtime.bpl package file located in the Text editor folder, then build with Shift+F9.
 DirectX 9c is required; the specific DLL is included in the source. 
 
+From a Windows command prompt, `build.bat` performs the same Delphi project build while preserving the previous executable if the build fails.
+
+## Map view
+
+The 2D map renderer is selected from **Floor > Map render mode**:
+
+- **Wireframe** is the default and draws the collision triangles using their surface flags.
+- **Topographic** groups connected floor triangles into filled contours with outlined boundaries and interior triangulation.
+- **Height shading** is available in Topographic mode and colors connected floors from low to high elevation with an on-map legend.
+
+Both render modes follow the active light or dark theme. The arrow button beside **Visual Map** collapses or restores the upper editing controls so the map can use more of the window.
+
+## Validation
+
+Run the map topology regression suite with Node.js before committing renderer changes:
+
+```text
+node tests/validate-map-topology.js
+```
+
+The validator exercises synthetic containment edge cases and checks every bundled `map/*c.rel` resource for valid indices, closed contours, connected-component isolation, and strict hole containment.
+
 The script text editor utilizes the TTextEditor control by Lasse Markus Rautiainen: https://github.com/TextEditorPro/TTextEditor
 
 ## Good to known
